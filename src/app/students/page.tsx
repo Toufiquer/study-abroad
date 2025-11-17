@@ -50,14 +50,6 @@ const defaultData = {
 export default function TestimonialsPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
-        <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="w-32 h-10 bg-gradient-to-r from-red-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">NES</span>
-          </div>
-          <button className="px-6 py-2 border-2 border-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-all">Contact</button>
-        </nav>
-      </header>
       <main>
         <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-20">
           <div className="container mx-auto px-4 text-center max-w-4xl">

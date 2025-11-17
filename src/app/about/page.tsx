@@ -153,31 +153,6 @@ const defaultData = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm animate-in fade-in slide-in-from-top duration-500">
-        <nav className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="relative w-32 h-10">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">NES</span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">About</button>
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">Students</button>
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">Study Abroad</button>
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">Institutions</button>
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">Careers</button>
-              <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">News and Events</button>
-            </div>
-            <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 font-semibold rounded-lg hover:bg-gray-900 hover:text-white transition-all transform hover:scale-105">
-              Contact
-            </button>
-          </div>
-        </nav>
-      </header>
-
       <main>
         <section className="relative bg-gradient-to-br from-gray-50 via-red-50 to-blue-50 py-20 overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
