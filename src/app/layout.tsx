@@ -1,20 +1,9 @@
 import type { Metadata } from 'next';
-// Google Fonts temporarily disabled due to network restrictions in build environment
-// import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ReduxProvider } from '@/redux/provider';
 import { ToastContainer } from 'react-toastify';
 import MenuComponentWithSession from '@/components/common/MenuWithSession';
-
-// const geistSans = Geist({
-//   variable: '--font-geist-sans',
-//   subsets: ['latin'],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: '--font-geist-mono',
-//   subsets: ['latin'],
-// });
+import PWAInstallPrompt from '@/components/common/Install-Pop-Up';
 
 export const metadata: Metadata = {
   title: 'Study Abroad',
@@ -36,6 +25,7 @@ export default function RootLayout({
         <ReduxProvider>
           <MenuComponentWithSession />
           <div>{children}</div>
+          <PWAInstallPrompt />
         </ReduxProvider>
         <ToastContainer style={{ top: '65px' }} />
       </body>
