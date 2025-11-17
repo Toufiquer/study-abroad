@@ -17,8 +17,8 @@ import MenuComponentWithSession from '@/components/common/MenuWithSession';
 // });
 
 export const metadata: Metadata = {
-  title: 'Tec Verse - App Generator',
-  description: 'For Faster Development',
+  title: 'Study Abroad',
+  description: 'The Dream came true',
   manifest: '/manifest.json',
   icons: {
     apple: '/icons/icon-192x192.png',

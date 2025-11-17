@@ -11,26 +11,16 @@ const MenuComponentWithSession = () => {
   const session = useSession();
 
   const logInMenuData = [
-    { id: 1, name: 'About', path: '/about' },
-    { id: 111, name: 'T', path: '/test' },
-    { id: 112, name: 'I', path: '/image' },
-    { id: 11, name: 'TG', path: '/template-generator' },
-    { id: 12, name: 'SM', path: '/site-menu' },
-    { id: 14, name: 'PB', path: '/page-builder' },
-    { id: 2, name: 'Course', path: '/course' },
+    { id: 1, name: 'Home', path: '/' },
+    { id: 2, name: 'About', path: '/about' },
     { id: 3, name: 'Contact', path: '/contact' },
     { id: 4, name: 'Service', path: '/service' },
     { id: 5, name: 'Dashboard', path: '/dashboard' },
   ];
 
   const notLogInMenuData = [
-    { id: 1, name: 'About', path: '/about' },
-    { id: 111, name: 'T', path: '/test' },
-    { id: 112, name: 'I', path: '/image' },
-    { id: 11, name: 'TG', path: '/template-generator' },
-    { id: 12, name: 'SM', path: '/site-menu' },
-    { id: 14, name: 'PB', path: '/page-builder' },
-    { id: 2, name: 'Course', path: '/course' },
+    { id: 1, name: 'Home', path: '/' },
+    { id: 2, name: 'About', path: '/about' },
     { id: 3, name: 'Contact', path: '/contact' },
     { id: 4, name: 'Service', path: '/service' },
     { id: 5, name: 'Login', path: '/login' },
@@ -55,7 +45,7 @@ const MenuComponentWithSession = () => {
             href="/"
             className="text-lg md:text-xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-300 via-blue-300 to-sky-200 drop-shadow-lg hover:opacity-90 transition-opacity"
           >
-            App Generator
+            Study Abroad
           </Link>
 
           {/* Desktop Menu */}
