@@ -12,18 +12,42 @@ const MenuComponentWithSession = () => {
 
   const logInMenuData = [
     { id: 1, name: 'Home', path: '/' },
-    { id: 2, name: 'About', path: '/about' },
+    {
+      id: 2,
+      name: 'About',
+      path: '/about',
+      child: [
+        { id: 100201, name: 'About', path: '/about' },
+        { id: 100202, name: 'Our Partners', path: '/about/our-partners' },
+        { id: 100202, name: 'Our Team', path: '/about/our-team' },
+      ],
+    },
     { id: 3, name: 'Contact', path: '/contact' },
-    { id: 4, name: 'Service', path: '/service' },
+    { id: 4, name: 'Career', path: '/career' },
+    { id: 4, name: 'Institutions', path: '/institutions' },
+    { id: 4, name: 'Students', path: '/students' },
+    { id: 4, name: 'Study Abroad', path: '/study-abroad' },
     { id: 5, name: 'Dashboard', path: '/dashboard' },
   ];
 
   const notLogInMenuData = [
     { id: 1, name: 'Home', path: '/' },
-    { id: 2, name: 'About', path: '/about' },
+    {
+      id: 2,
+      name: 'About',
+      path: '/about',
+      child: [
+        { id: 100201, name: 'About', path: '/about' },
+        { id: 100202, name: 'Our Partners', path: '/about/our-partners' },
+        { id: 100202, name: 'Our Team', path: '/about/our-team' },
+      ],
+    },
     { id: 3, name: 'Contact', path: '/contact' },
-    { id: 4, name: 'Service', path: '/service' },
-    { id: 5, name: 'Login', path: '/login' },
+    { id: 4, name: 'Career', path: '/career' },
+    { id: 4, name: 'Institutions', path: '/institutions' },
+    { id: 4, name: 'Students', path: '/students' },
+    { id: 4, name: 'Study Abroad', path: '/study-abroad' },
+    { id: 5, name: 'Dashboard', path: '/dashboard' },
   ];
 
   const menuData = session?.data?.session ? logInMenuData : notLogInMenuData;

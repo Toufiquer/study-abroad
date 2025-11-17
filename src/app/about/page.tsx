@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Globe, Users, Target, Sparkles, Award, TrendingUp, BookOpen, Heart, CheckCircle } from 'lucide-react';
+import { Globe, Users, Target, Award, CheckCircle } from 'lucide-react';
 
 interface Milestone {
   id: string;
