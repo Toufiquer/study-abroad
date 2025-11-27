@@ -24,7 +24,7 @@ async function getFooterData() {
       footerUId: 'footer-uid-2',
       isActive: true,
       data: {
-        brandName: 'Tec Verse',
+        brandName: 'Future Nest Abrod',
         logoUrl: 'https://i.ibb.co/pzsn8MG/english-logo.png',
         logoWidth: 50,
         tagline: 'Crafting digital experiences that inspire and innovate. We build the future, one pixel at a time.',

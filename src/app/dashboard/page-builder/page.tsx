@@ -6,9 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// Assuming IPage is in your utils, but I will define a local interface to ensure TS works with the fix
 import { useGetPagesQuery, useAddPageMutation, useUpdatePageMutation, useDeletePageMutation } from '@/redux/features/page-builder/pageBuilderSlice';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 // Normalized Interface to handle inconsistent API data
 interface IPage {
@@ -24,7 +23,7 @@ const Page = () => {
   // Redux hooks
   // Added 'refetch' to manually reload data if needed
   const { data: pagesData, isLoading, error, refetch } = useGetPagesQuery({ page: 1, limit: 100 });
-
+  console.log('pagesData : ', pagesData);
   const [addPage, { isLoading: isAdding }] = useAddPageMutation();
   const [updatePage] = useUpdatePageMutation();
   const [deletePage] = useDeletePageMutation();

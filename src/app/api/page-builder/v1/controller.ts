@@ -9,18 +9,14 @@ interface MongoError extends Error {
 }
 
 function isMongoError(error: unknown): error is MongoError {
-  return (
-    error !== null &&
-    typeof error === 'object' &&
-    'code' in error &&
-    typeof (error as MongoError).code === 'number'
-  );
+  return error !== null && typeof error === 'object' && 'code' in error && typeof (error as MongoError).code === 'number';
 }
 
 export async function createPage(req: Request): Promise<IResponse> {
   return withDB(async () => {
     try {
       const pageData = await req.json();
+      console.log('PageData : ', pageData);
 
       const newPage = await PageBuilder.create(pageData);
 
@@ -75,9 +71,9 @@ export async function getPages(req: Request): Promise<IResponse> {
     return formatResponse({ pages, total, page, limit }, 'Fetched successfully', 200);
   });
 }
-// get All pages for SSG in /src/app/[...pageTitle]/page.tsx 
+// get All pages for SSG in /src/app/[...pageTitle]/page.tsx
 export async function getAllPages(): Promise<IResponse> {
-  return withDB(async () => { 
+  return withDB(async () => {
     const page = parseInt('1');
     const limit = parseInt('1000');
     const skip = (page - 1) * limit;

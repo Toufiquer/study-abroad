@@ -260,6 +260,7 @@ function AddImageModal({ onClose, onSuccess, onError }: { onClose: () => void; o
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || 'Failed to add URL');
       onSuccess(json.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       onError(err.message);
     } finally {
@@ -307,6 +308,7 @@ function AddImageModal({ onClose, onSuccess, onError }: { onClose: () => void; o
       if (!res.ok) throw new Error(json.message);
 
       onSuccess(json.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       onError(err.message || 'Upload failed');
     } finally {

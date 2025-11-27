@@ -2,16 +2,16 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ReduxProvider } from '@/redux/provider';
 import { ToastContainer } from 'react-toastify';
-import { Toaster } from 'sonner';
 import MenuComponentWithSession from '@/components/common/MenuWithSession';
 import { getMenuData } from '@/app/api/menu-editor/controller';
 import fs from 'fs';
 import path from 'path';
 import FooterComponent from '@/components/common/FooterComponent';
+import InstallPwaPopup from '@/components/common/InstallPwaPopup';
 
 export const metadata: Metadata = {
-  title: 'Tec Verse - App Generator',
-  description: 'For Faster Development',
+  title: 'Future Nest Abroad',
+  description: 'Achieve your desired Dream',
   manifest: '/manifest.json',
   icons: {
     apple: '/icons/icon-192x192.png',
@@ -53,8 +53,8 @@ export default async function RootLayout({
           <MenuComponentWithSession serverMenuData={menu?.items} serverBrandSettings={brandSettings} />
           <main className=" animate-in fade-in duration-500">{children}</main>
           <FooterComponent />
+          <InstallPwaPopup />
         </ReduxProvider>
-        <Toaster position="top-right" richColors closeButton theme="light" />
         <ToastContainer style={{ top: '80px', zIndex: 9999 }} toastClassName="backdrop-blur-md bg-white/90 shadow-xl border border-slate-100 rounded-xl" />
       </body>
     </html>

@@ -1,7 +1,7 @@
 {
-  "name": "App Generator",
-  "short_name": "App Generator",
-  "description": "Achieve your desired IELTS band score",
+  "name": "Future Nest Abroad",
+  "short_name": "Future Nest Abroad",
+  "description": "Achieve your desired Dream",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
