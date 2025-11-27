@@ -65,6 +65,7 @@ const initialJsonTemplate: JsonTemplate = {
   schema: {
     title: 'STRING',
     email: 'EMAIL',
+    'author-email': 'EMAIL#readonly',
     password: 'PASSWORD',
     passcode: 'PASSCODE',
     area: 'SELECT#Bangladesh, India, Pakistan, Canada',

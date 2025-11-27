@@ -4,6 +4,8 @@ import { generateModel } from './generate-model'
 import { generateRoute } from './generate-route'
 import { generateSummaryController } from './summary/generate-controller'
 import { generateSummaryRoute } from './summary/generate-route'
+import { generatePersonalController } from './personal/generate-controller'
+import { generatePersonalRoute } from './personal/generate-route'
 
 const generateApi = async (data: string) => {
     let folderName = 'example'
@@ -23,6 +25,8 @@ const generateApi = async (data: string) => {
     const routeTemplate = generateRoute(data)
     const sumaryRouteTemplate = generateSummaryRoute(data)
     const summaryControllerTemplate = generateSummaryController(data)
+    const generatePersonalControllerTemplate = generatePersonalController(data)
+    const generatePersonalRouteTemplate = generatePersonalRoute(data)
 
     if (isUseGenerateFolder) {
         writeInFile(
@@ -46,6 +50,14 @@ const generateApi = async (data: string) => {
             summaryControllerTemplate,
             `src/app/generate/${folderName}/all/api/v1/summary/controller.ts`
         )
+        writeInFile(
+            generatePersonalRouteTemplate,
+            `src/app/generate/${folderName}/all/api/v1/personal/route.ts`
+        )
+        writeInFile(
+            generatePersonalControllerTemplate,
+            `src/app/generate/${folderName}/all/api/v1/personals/controller.ts`
+        )
     } else {
         writeInFile(
             controllerTemplate,
@@ -61,6 +73,14 @@ const generateApi = async (data: string) => {
         writeInFile(
             summaryControllerTemplate,
             `src/app/api/${folderName}/v1/summary/controller.ts`
+        )
+        writeInFile(
+            generatePersonalRouteTemplate,
+            `src/app/api/${folderName}/v1/personal/route.ts`
+        )
+        writeInFile(
+            generatePersonalControllerTemplate,
+            `src/app/api/${folderName}/v1/personals/controller.ts`
         )
     }
 }

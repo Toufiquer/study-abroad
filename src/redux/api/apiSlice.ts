@@ -28,6 +28,7 @@ export const apiSlice = createApi({
     'tagTypeAccounts',
     'tagTypeVerifications',
     'tagTypeSessions',
+    'FooterSettings',
     'tagTypeSidebars',
     'tagTypeProfile',
     'tagTypePageBuilder',

@@ -35,8 +35,10 @@ export const useFetchSidebar = (email: string) => {
   );
 
   useEffect(() => {
+    const apiSidebars = allSidebarsQuery?.data?.sidebars || [];
+    const mappedAPISidebars = convertAPISidebarItemsToIDefaultSidebarItems(apiSidebars);
     if (is_active_authorization === 'false') {
-      setSidebarData(defaultDashboardSidebarFullData);
+      setSidebarData([...defaultDashboardSidebarFullData]);
       return;
     }
 
@@ -44,9 +46,6 @@ export const useFetchSidebar = (email: string) => {
       setSidebarData(defaultDashboardSidebarData);
       return;
     }
-
-    const apiSidebars = allSidebarsQuery?.data?.sidebars || [];
-    const mappedAPISidebars = convertAPISidebarItemsToIDefaultSidebarItems(apiSidebars);
 
     const userRoles: string[] = userAccessManagementQuery?.data?.accessManagements?.[0]?.assign_role || [];
 

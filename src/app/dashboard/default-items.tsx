@@ -16,6 +16,7 @@ import {
   FileSignature,
   Sidebar,
   User2,
+  SidebarIcon,
 } from 'lucide-react';
 import { BsEnvelopeArrowUp } from 'react-icons/bs';
 
@@ -77,6 +78,8 @@ export const defaultDashboardSidebarFullData: IDefaultSidebarItem[] = [
       { id: 11, name: 'Access', path: '/dashboard/access/access', icon: <FolderKanban size={16} /> },
       { id: 12, name: 'Role', path: '/dashboard/access/role', icon: <FileSignature size={16} /> },
       { id: 122, name: 'Sidebar', path: '/dashboard/access/sidebar', icon: <Sidebar size={16} /> },
+      { id: 123, name: 'Menu Editor', path: '/dashboard/access/menu-editor', icon: <Menu size={16} /> },
+      { id: 124, name: 'Footer Editor', path: '/dashboard/access/footer-editor', icon: <SidebarIcon size={16} /> },
       { id: 13, name: 'Account', path: '/dashboard/access/account', icon: <User size={16} /> },
       { id: 14, name: 'Users', path: '/dashboard/access/user', icon: <Users size={16} /> },
       { id: 15, name: 'Session', path: '/dashboard/access/session', icon: <FileText size={16} /> },
@@ -85,18 +88,14 @@ export const defaultDashboardSidebarFullData: IDefaultSidebarItem[] = [
   },
   {
     id: 2,
-    name: 'Site Settings',
-    path: '/dashboard/site-setting',
+    name: 'Page Builder',
+    path: '/dashboard/page-builder',
     icon: <Settings size={18} />,
-    children: [
-      { id: 21, name: 'About', path: '/dashboard/site-setting/about', icon: <Info size={16} /> },
-      { id: 22, name: 'Services', path: '/dashboard/site-setting/service', icon: <Wrench size={16} /> },
-      { id: 23, name: 'Contact', path: '/dashboard/site-setting/contact', icon: <Phone size={16} /> },
-      { id: 24, name: 'FAQ', path: '/dashboard/site-setting/faq', icon: <HelpCircle size={16} /> },
-      { id: 25, name: 'Menu', path: '/dashboard/site-setting/menu', icon: <Menu size={16} /> },
-      { id: 26, name: 'Privacy Policy', path: '/dashboard/site-setting/privacy-policy', icon: <Lock size={16} /> },
-      { id: 27, name: 'Terms & Conditions', path: '/dashboard/site-setting/terms-conditions', icon: <ScrollText size={16} /> },
-      { id: 28, name: 'Footer', path: '/dashboard/site-setting/footer', icon: <FileBadge size={16} /> },
-    ],
+  },
+  {
+    id: 3,
+    name: 'Media',
+    path: '/dashboard/media',
+    icon: <Settings size={18} />,
   },
 ];

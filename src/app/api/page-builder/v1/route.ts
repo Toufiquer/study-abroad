@@ -1,17 +1,17 @@
 import { revalidatePath } from 'next/cache';
-import { getSections, createSection, updateSection, deleteSection, getSectionById } from './controller';
+import { getPages, createPage, updatePage, deletePage, getPageById } from './controller';
 
 import { formatResponse, IResponse } from '@/app/api/utils/jwt-verify';
 
 export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get('id');
-  const result: IResponse = id ? await getSectionById(req) : await getSections(req);
+  const result: IResponse = id ? await getPageById(req) : await getPages(req);
 
   return formatResponse(result.data, result.message, result.status);
 }
 
 export async function POST(req: Request) {
-  const result = await createSection(req);
+  const result = await createPage(req);
 
   if (result.status === 200 || result.status === 201) {
     revalidatePath('/page-builder');
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const result = await updateSection(req);
+  const result = await updatePage(req);
 
   if (result.status === 200) {
     revalidatePath('/page-builder');
@@ -31,7 +31,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const result = await deleteSection(req);
+  const result = await deletePage(req);
 
   if (result.status === 200) {
     revalidatePath('/page-builder');

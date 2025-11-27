@@ -1,5 +1,7 @@
-export interface ISectionData {
-  id: string;
+export interface Section1Props {
+  data?: ISection1Data | string;
+}
+export interface ISection1Data {
   sectionUid: string;
   title: string;
   image: string;
@@ -12,13 +14,8 @@ export interface ISectionData {
   enrollmentText: string;
 }
 
-export interface Section1Props {
-  data?: ISectionData | string;
-}
-
-export const defaultData: ISectionData = {
+export const defaultDataSection1: ISection1Data = {
   sectionUid: 'section-uid-1',
-  id: 'adsfdsfdfdsaa',
   title: 'Most common Component',
   image: 'https://i.ibb.co.com/PGXYXwTq/img.jpg',
   heading: 'Lecture 45',

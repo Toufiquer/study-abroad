@@ -11,7 +11,5 @@ export async function GET(req: Request) {
 
   const result = await isUserHasAccess(wantToAccess);
 
-  console.log('result: ', result); // Check terminal logs
-
   return formatResponse(result, 'Server is running', 200);
 }

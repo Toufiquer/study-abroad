@@ -1,159 +1,226 @@
-// app/[...pageTitle]/page.tsx
-// SSR Page
+/*
+|-----------------------------------------
+| Static SSG Page (Server Component)
+| @description: Pre-renders pages based on URL path at BUILD TIME
+|-----------------------------------------
+*/
 
 import { notFound } from 'next/navigation';
-import { fetchAllPages, findPageByPath } from '@/lib/page-builder-api';
-import { Page, SubPage } from '@/types/page-builder';
-import Link from 'next/link';
-import { AlertCircle } from 'lucide-react';
+import { cache } from 'react'; // Import cache
+import { MousePointer2, Type, Layers, MonitorPlay, ImageIcon } from 'lucide-react';
 
-import ClientSection1 from '@/components/all-section/section-1/Client';
-import ClientSection2 from '@/components/all-section/section-2/Client';
-import ClientSection3 from '@/components/all-section/section-3/Client';
-import ClientSection4 from '@/components/all-section/section-4/Client';
-import ClientSection5 from '@/components/all-section/section-5/Client';
-import ClientSection6 from '@/components/all-section/section-6/Client';
+// Import your existing component maps
+import { AllSections, AllSectionsKeys } from '@/components/all-section/all-section-index/all-sections';
+import { AllForms, AllFormsKeys } from '@/components/all-form/all-form-index/all-form';
+import { AllTags, AllTagsKeys } from '@/components/all-tags/all-tags-index/all-tags';
 
-const ClientSectionRegistry = {
-  'section-uid-1': ClientSection1,
-  'section-uid-2': ClientSection2,
-  'section-uid-3': ClientSection3,
-  'section-uid-4': ClientSection4,
-  'section-uid-5': ClientSection5,
-  'section-uid-6': ClientSection6,
+import { ItemType, PageContent } from '@/app/dashboard/page-builder/utils';
+import { getAllPages } from '../api/page-builder/v1/controller';
+
+// --- Types ---
+interface PageApiResponse {
+  data: {
+    pages: NormalizedPage[];
+    total: number;
+    page: number;
+    limit: number;
+  };
+  message: string;
+  status: number;
+}
+
+interface NormalizedPage {
+  _id: string;
+  pageName: string;
+  path: string;
+  isActive?: boolean;
+  content: PageContent[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+// --- Component Mappings ---
+const AllTitles = AllTags;
+const AllTitlesKeys = AllTagsKeys;
+const AllDescriptions = AllTags;
+const AllDescriptionsKeys = AllTagsKeys;
+const AllParagraphs = AllTags;
+const AllParagraphsKeys = AllTagsKeys;
+const AllSliders = AllTags;
+const AllSlidersKeys = AllTagsKeys;
+const AllTagSliders = AllTags;
+const AllTagSlidersKeys = AllTagsKeys;
+const AllLogoSliders = AllTags;
+const AllLogoSlidersKeys = AllTagsKeys;
+const AllGalleries = AllTags;
+const AllGalleriesKeys = AllTagsKeys;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const COMPONENT_MAP: Record<ItemType, { collection: any; keys: string[]; label: string; icon: any }> = {
+  button: { collection: AllTags, keys: AllTagsKeys, label: 'Tags', icon: MousePointer2 },
+  form: { collection: AllForms, keys: AllFormsKeys, label: 'Forms', icon: Type },
+  section: { collection: AllSections, keys: AllSectionsKeys, label: 'Sections', icon: Layers },
+  title: { collection: AllTitles, keys: AllTitlesKeys, label: 'Title', icon: Type },
+  description: { collection: AllDescriptions, keys: AllDescriptionsKeys, label: 'Description', icon: Type },
+  paragraph: { collection: AllParagraphs, keys: AllParagraphsKeys, label: 'Paragraph', icon: Type },
+  sliders: { collection: AllSliders, keys: AllSlidersKeys, label: 'Sliders', icon: MonitorPlay },
+  tagSliders: { collection: AllTagSliders, keys: AllTagSlidersKeys, label: 'Tag Slider', icon: MonitorPlay },
+  logoSliders: { collection: AllLogoSliders, keys: AllLogoSlidersKeys, label: 'Logo Slider', icon: MonitorPlay },
+  gellery: { collection: AllGalleries, keys: AllGalleriesKeys, label: 'Gallery', icon: ImageIcon },
 };
 
-interface PageProps {
-  params: Promise<{
-    pageTitle: string[];
-  }>;
-}
-
-async function DynamicPage({ params }: PageProps) {
-  const { pageTitle } = await params;
-
+// --- Data Fetching Logic (Cached) ---
+// We use React cache() to ensure we fetch data once during build for all components
+const getCachedAllPages = cache(async (): Promise<NormalizedPage[]> => {
   try {
-    const response = await fetchAllPages();
-    const result = findPageByPath(response.data.pages, pageTitle);
+    const pagesData = (await getAllPages()) as unknown as PageApiResponse;
 
-    if (!result) {
-      notFound();
+    if (pagesData && Array.isArray(pagesData.data.pages)) {
+      return getNormalizedPages(pagesData.data.pages.filter(i => i.isActive));
     }
-
-    const { type, data } = result;
-    const pageData = data as Page | SubPage;
-    if (!pageData.isActive) {
-      return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-8">
-          <div className="bg-white/5 backdrop-blur-[8px] border border-white/20 p-8 rounded-lg text-center">
-            <AlertCircle className="h-12 w-12 text-white/60 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">Page Inactive</h1>
-            <p className="text-white/70">This page is currently inactive</p>
-          </div>
-        </main>
-      );
-    }
-
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="bg-white/5 backdrop-blur-[8px] border-b border-white/20 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-8 py-4">
-            <h1 className="text-2xl font-bold text-white">{pageData.pageTitle}</h1>
-          </div>
-        </div>
-
-        <div className="w-full flex flex-col">
-          {pageData.content.length === 0 ? (
-            <div className="min-h-[60vh] flex items-center justify-center p-8">
-              <div className="bg-white/5 backdrop-blur-[8px] border border-white/20 p-8 rounded-lg text-center">
-                <p className="text-white/70 text-lg">No sections added to this page yet</p>
-              </div>
-            </div>
-          ) : (
-            pageData.content
-              .filter(section => section.isActive)
-              .sort((a, b) => a.serialNo - b.serialNo)
-              .map(section => {
-                const ClientComponent = ClientSectionRegistry[section.sectionUid as keyof typeof ClientSectionRegistry];
-
-                if (!ClientComponent) {
-                  return (
-                    <div key={section._id} className="py-12">
-                      <div className="max-w-7xl mx-auto px-8">
-                        <div className="bg-white/5 backdrop-blur-[8px] border border-white/20 p-8 rounded-lg text-center">
-                          <p className="text-white/70">Section &quot;{section.sectionUid}&quot; not found</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return <ClientComponent key={section._id} data={JSON.stringify(section) as string} />;
-              })
-          )}
-        </div>
-
-        {type === 'page' && 'subPage' in data && data.subPage.length > 0 && data.subPage.filter(sub => sub.isActive).length > 0 && (
-          <div className="max-w-7xl mx-auto px-8 py-16">
-            <div className="bg-white/5 backdrop-blur-[8px] border border-white/20 p-8 rounded-lg">
-              <h2 className="text-2xl font-semibold text-white mb-6">Subpages</h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {data.subPage
-                  .filter(sub => sub.isActive)
-                  .map(subPage => (
-                    <Link
-                      key={subPage._id}
-                      href={data.pagePath === '/' ? subPage.pagePath : `${data.pagePath}${subPage.pagePath}`}
-                      className="bg-white/5 backdrop-blur-[8px] border border-white/20 p-6 rounded-lg hover:bg-white/10 hover:border-white/30 transition-all"
-                    >
-                      <h3 className="font-medium text-white text-lg mb-2">{subPage.pageTitle}</h3>
-                      <p className="text-sm text-white/50 font-mono">{subPage.pagePath}</p>
-                    </Link>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-    );
+    return [];
   } catch (error) {
-    console.error('Error fetching page data:', error);
-    notFound();
-  }
-}
-
-export async function generateStaticParams() {
-  try {
-    const response = await fetchAllPages();
-    const params: { pageTitle: string[] }[] = [];
-
-    response.data.pages.forEach(page => {
-      if (page.isActive && page.pagePath !== '/') {
-        const segments = page.pagePath.split('/').filter(Boolean);
-        if (segments.length > 0) {
-          params.push({ pageTitle: segments });
-        }
-      }
-
-      page.subPage.forEach(subPage => {
-        if (subPage.isActive) {
-          const fullPath = page.pagePath === '/' ? subPage.pagePath : `${page.pagePath}${subPage.pagePath}`;
-          const segments = fullPath.split('/').filter(Boolean);
-          if (segments.length > 0) {
-            params.push({ pageTitle: segments });
-          }
-        }
-      });
-    });
-
-    return params;
-  } catch (error) {
-    console.error('Error generating static params:', error);
+    console.error('Error fetching pages:', error);
     return [];
   }
+});
+
+// --- Helper: Flatten Pages ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getNormalizedPages(rawPages: any[]): NormalizedPage[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenPages = (list: any[]): NormalizedPage[] => {
+    let results: NormalizedPage[] = [];
+    list.forEach(item => {
+      const norm: NormalizedPage = {
+        ...item,
+        _id: item._id,
+        pageName: item.pageName || item.pageTitle || 'Untitled',
+        // Ensure path starts with / for consistent matching
+        path: (item.path || item.pagePath || '#').startsWith('/') ? item.path || item.pagePath : '/' + (item.path || item.pagePath),
+        content: item.content || [],
+      };
+      results.push(norm);
+
+      if (item.subPage && Array.isArray(item.subPage)) {
+        results = [...results, ...flattenPages(item.subPage)];
+      }
+    });
+    return results;
+  };
+  return flattenPages(rawPages);
 }
 
-export const dynamicParams = false;
-export const dynamic = 'force-static';
+// --- Component: SSR Item Renderer ---
+const SSRItemRenderer = ({ item }: { item: PageContent }) => {
+  if (!item.type || !COMPONENT_MAP[item.type]) return null;
 
-export default DynamicPage;
+  const mapEntry = COMPONENT_MAP[item.type];
+  const config = mapEntry ? mapEntry.collection[item.key] : null;
+
+  if (!mapEntry || !config) return null;
+
+  let ComponentToRender;
+  if (item.type === 'form') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ComponentToRender = (config as any).FormField;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ComponentToRender = (config as any).query;
+  }
+
+  if (!ComponentToRender) return null;
+
+  return (
+    <div className="w-full">
+      {item.type !== 'form' ? (
+        <ComponentToRender data={JSON.stringify(item.data)} />
+      ) : (
+        <div className="pointer-events-auto">
+          <ComponentToRender data={item.data} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Helper: Construct Path from Params ---
+const constructPathFromParams = (slugs: string[]) => {
+  if (!slugs || slugs.length === 0) return '/';
+  return '/' + slugs.join('/');
+};
+
+// --- STATIC GENERATION: generateStaticParams ---
+// This is the key function that makes it Static.
+// It tells Next.js which routes to build.
+export async function generateStaticParams() {
+  const pages = await getCachedAllPages();
+  return pages.map(page => {
+    // Convert string path "/about/us" to array ["about", "us"]
+    // If path is just "/", slug is [] (if using optional catch-all)
+    const slug = page.path === '/' ? [] : page.path.split('/').filter(Boolean);
+
+    return {
+      pageTitle: slug,
+    };
+  });
+}
+
+// Optional: Control what happens for paths not returned by generateStaticParams
+// true (default): Dynamic render on first request, then static
+// false: 404 for any path not generated at build time
+export const dynamicParams = true;
+
+// --- Metadata Generator (SEO) ---
+export async function generateMetadata({ params }: { params: Promise<{ pageTitle: string[] }> }) {
+  const resolvedParams = await params;
+  const pathString = constructPathFromParams(resolvedParams.pageTitle);
+
+  const pages = await getCachedAllPages();
+  const currentPage = pages.find(p => p.path === pathString);
+
+  if (!currentPage) {
+    return { title: 'Page Not Found' };
+  }
+
+  return {
+    title: currentPage.pageName,
+  };
+}
+
+// --- Main Page Component ---
+export default async function StaticPage({ params }: { params: Promise<{ pageTitle: string[] }> }) {
+  const resolvedParams = await params;
+  const pathString = constructPathFromParams(resolvedParams.pageTitle);
+
+  // 1. Fetch Data (Uses Cache)
+  const pages = await getCachedAllPages();
+
+  // 2. Find the matching page
+  const currentPage = pages.find(p => p.path === pathString);
+
+  // 3. Handle 404
+  if (!currentPage) {
+    notFound();
+  }
+
+  // 4. Extract Content
+  const items: PageContent[] = Array.isArray(currentPage.content) ? currentPage.content : [];
+
+  return (
+    <main className="min-h-screen w-full bg-slate-950 pt-[80px]">
+      {items.length === 0 ? (
+        <div className="min-h-[50vh] flex flex-col items-center justify-center text-slate-500 space-y-4">
+          <p className="text-lg font-medium">Page &quot;{currentPage.pageName}&quot; Found</p>
+          <p className="text-sm">But it has no content configured yet.</p>
+        </div>
+      ) : (
+        <div className="w-full flex flex-col">
+          {items.map((item, index) => (
+            <SSRItemRenderer key={item.id || index} item={item} />
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

@@ -1,4 +1,4 @@
-// ✅ Updated generate-edit.tsx (Glassmorphism output, unified imports)
+// ✅ Updated generate-edit.tsx (With EMAIL#readonly support)
 interface Schema {
   [key: string]: string | Schema;
 }
@@ -50,7 +50,15 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
 
   const generateFormFieldJsx = (key: string, type: string): string => {
     const label = key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const [typeName, optionsString] = type.split('#');
+    
+    // Split the type, but allow specific overrides before the switch
+    let [typeName, optionsString] = ["", ""];
+     [typeName, optionsString] = type.split('#');
+
+    // Special handling for EMAIL#readonly to create a unique switch case
+    if (type === 'EMAIL#readonly') {
+        typeName = 'EMAIL#READONLY';
+    }
 
     const formFieldWrapper = (label: string, componentJsx: string, alignTop: boolean = false): string => `
             <div className="grid grid-cols-1 md:grid-cols-4 ${alignTop ? 'items-start' : 'items-center'} gap-4 pr-1">
@@ -71,6 +79,10 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
         break;
       case 'EMAIL':
         componentJsx = `<InputFieldForEmail className="text-white" id="${key}" value={${editedStateName}['${key}']} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
+        break;
+      // ✅ New case for Readonly Email in Edit mode
+      case 'EMAIL#READONLY':
+        componentJsx = `<InputFieldForEmail readonly className="text-white" id="${key}" value={${editedStateName}['${key}']} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
         break;
       case 'PASSWORD':
         componentJsx = `<InputFieldForPassword id="${key}" value={${editedStateName}['${key}']} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
@@ -184,7 +196,6 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
 
   const dynamicVariablesContent = componentBodyStatements.size > 0 ? `${[...componentBodyStatements].sort().join('\n\n')}` : '';
 
-  // ✅ Unify with Add generator imports path
   const reduxPath = `@/redux/features/${pluralLowerCase}/${pluralLowerCase}Slice`;
 
   const staticImports = `import AutocompleteField from '@/components/dashboard-ui/AutocompleteField'

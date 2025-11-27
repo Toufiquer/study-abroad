@@ -1,8 +1,8 @@
 export interface Section5Props {
-   data?: ISectionData | string;
+  data?: ISection5Data | string;
 }
 
-export interface ISectionData {
+export interface ISection5Data {
   sectionUid: string;
   id: string;
   title: string;
@@ -21,7 +21,7 @@ export interface ISectionData {
   highlights: string[];
 }
 
-export const defaultData: ISectionData = {
+export const defaultDataSection5: ISection5Data = {
   sectionUid: 'section-uid-5',
   id: 'agency_section_004',
   title: 'Digital Excellence Delivered',

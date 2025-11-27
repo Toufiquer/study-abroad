@@ -1,4 +1,4 @@
-// ✅ Updated generate-add.tsx (Glassmorphism output)
+// ✅ Updated generate-add.tsx (With EMAIL#readonly logic update)
 interface Schema {
   [key: string]: string | Schema;
 }
@@ -26,6 +26,10 @@ export const generateAddComponentFile = (inputJsonFile: string): string => {
   const interfaceName = `I${pluralPascalCase}`;
   const defaultInstanceName = `default${pluralPascalCase}`;
 
+  // Find the key that has 'EMAIL#readonly'
+  const readonlyEmailKey = Object.keys(schema).find(key => schema[key] === 'EMAIL#readonly');
+  const hasReadonlyEmail = !!readonlyEmailKey;
+
   const componentBodyStatements = new Set<string>();
 
   const toCamelCase = (str: string) => str.replace(/-(\w)/g, (_, c) => c.toUpperCase());
@@ -49,7 +53,13 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
 
   const generateFormFieldJsx = (key: string, type: string): string => {
     const label = key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const [typeName, optionsString] = type.split('#');
+    let [typeName, optionsString] = ["", ""];
+     [typeName, optionsString] = type.split('#');
+    
+    // Treat EMAIL#readonly as a distinct type for switch case
+    if (type === 'EMAIL#readonly') {
+        typeName = 'EMAIL#readonly';
+    }
 
     const formFieldWrapper = (label: string, componentJsx: string, alignTop: boolean = false): string => `
             <div className="grid grid-cols-1 md:grid-cols-4 ${alignTop ? 'items-start' : 'items-center'} gap-4 pr-1">
@@ -70,6 +80,10 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
         break;
       case 'EMAIL':
         componentJsx = `<InputFieldForEmail className="text-white" id="${key}" value={new${singularPascalCase}['${key}']} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
+        break;
+      case 'EMAIL#READONLY':
+        // Display author_email directly in value, but keep onChange to satisfy type (though readonly)
+        componentJsx = `<InputFieldForEmail readonly className="text-white" id="${key}" value={author_email} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
         break;
       case 'PASSWORD':
         componentJsx = `<InputFieldForPassword id="${key}" value={new${singularPascalCase}['${key}']} onChange={(value) => handleFieldChange('${key}', value as string)} />`;
@@ -134,7 +148,7 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
         break;
       }
       case 'DYNAMICSELECT':
-        isTallComponent = true; // DynamicSelectField is usually taller due to potential dropdown content
+        isTallComponent = true; 
         componentJsx = `<DynamicSelectField value={new${singularPascalCase}['${key}']} apiUrl='https://jsonplaceholder.typicode.com/users' onChange={(values) => handleFieldChange('${key}', values)} />`;
         break;
       case 'IMAGE':
@@ -188,6 +202,8 @@ ${optionsArray.map(opt => `        { label: '${opt.label}', value: '${opt.value}
 
   const reduxPath = `@/redux/features/${pluralLowerCase}/${pluralLowerCase}Slice`;
 
+  const authImport = hasReadonlyEmail ? `import { useSession } from '@/lib/auth-client';` : '';
+
   const staticImports = `import AutocompleteField from '@/components/dashboard-ui/AutocompleteField'
 import ColorPickerField from '@/components/dashboard-ui/ColorPickerField'
 import DateRangePickerField from '@/components/dashboard-ui/DateRangePickerField'
@@ -217,7 +233,7 @@ import { SelectField } from '@/components/dashboard-ui/SelectField'
 
 import StringArrayField from './others-field-type/StringArrayField'
 import { StringArrayData } from './others-field-type/types';
-
+${authImport}
 `;
 
   return `import {useEffect, useState } from 'react'
@@ -246,6 +262,11 @@ const AddNextComponents: React.FC = () => {
     const [add${pluralPascalCase}, { isLoading }] = useAdd${pluralPascalCase}Mutation()
     const [new${singularPascalCase}, setNew${singularPascalCase}] = useState<${interfaceName}>(${defaultInstanceName})
 
+    ${hasReadonlyEmail ? `
+    const session = useSession();
+    const author_email = session?.data?.user?.email || "---";
+    ` : ''}
+
     const handleFieldChange = (name: string, value: unknown) => {
         setNew${singularPascalCase}(prev => ({ ...prev, [name]: value }))
     }
@@ -261,6 +282,7 @@ const AddNextComponents: React.FC = () => {
             //         return r
             //     })
             // }
+            ${hasReadonlyEmail ? `updateData['${readonlyEmailKey}'] = author_email` : ''}
             const added${singularPascalCase} = await add${pluralPascalCase}(updateData).unwrap()
             set${pluralPascalCase}([added${singularPascalCase}])
             toggleAddModal(false)
@@ -281,7 +303,7 @@ const AddNextComponents: React.FC = () => {
 ${dynamicVariablesContent}
   useEffect(() => {
     const updateDefaultData = { ...defaultPosts };
-    updateDefaultData.area = areaOptions[0].value;
+    // updateDefaultData.area = areaOptions[0].value;
     setNewPost(updateDefaultData);
   }, [defaultPosts]);
 

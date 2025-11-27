@@ -1,32 +1,36 @@
 import mongoose, { Schema } from 'mongoose';
 
-const contentItemSchema = new Schema(
+// Schema for individual content items (sections, forms, tags, etc.)
+const pageContentSchema = new Schema(
   {
-    isActive: { type: Boolean, default: true },
-    sectionUid: { type: String, required: true },
-    serialNo: { type: Number, required: true },
-    data: { type: Schema.Types.Mixed, required: false },
+    id: { type: String, required: true },
+    key: { type: String, required: true },
+    type: { 
+      type: String, 
+      required: true,
+      enum: ['section', 'form', 'button', 'title', 'description', 'paragraph', 'sliders', 'tagSliders', 'logoSliders', 'gellery']
+    },
+    heading: { type: String, required: true },
+    path: { type: String, required: true },
+    data: { type: Schema.Types.Mixed, default: {} },
   },
-  { _id: true, timestamps: false },
+  { _id: false, timestamps: false }
 );
-const subPageSchema = new Schema({}, { _id: true });
 
-subPageSchema.add({
-  pageTitle: { type: String, required: true },
-  pagePath: { type: String, required: true },
-  content: { type: [contentItemSchema], default: [] },
-  isActive: { type: Boolean, default: true },
-});
-
+// Main page builder schema
 const pageBuilderSchema = new Schema(
   {
-    pageTitle: { type: String, required: true },
-    pagePath: { type: String, required: true, unique: true },
-    content: { type: [contentItemSchema], default: [] },
-    subPage: { type: [subPageSchema], default: [] },
+    pageName: { type: String, required: true },
+    path: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    content: { type: [pageContentSchema], default: [] },
   },
-  { _id: true, timestamps: true },
+  { _id: true, timestamps: true }
 );
+
+// Add indexes for better query performance
+pageBuilderSchema.index({ path: 1 });
+pageBuilderSchema.index({ isActive: 1 });
+pageBuilderSchema.index({ 'content.type': 1 });
 
 export default mongoose.models.PageBuilder || mongoose.model('PageBuilder', pageBuilderSchema);

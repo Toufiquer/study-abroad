@@ -6,6 +6,10 @@ const postSchema = new Schema({
           type: String,
           match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
         },
+    "author-email": {
+          type: String,
+          match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
+        },
     "password": { type: String, select: false },
     "passcode": { type: String, select: false },
     "area": { type: String, enum: ['Bangladesh', 'India', 'Pakistan', 'Canada'] },

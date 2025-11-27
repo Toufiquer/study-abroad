@@ -54,7 +54,6 @@ export async function getAccessManagements(req: Request): Promise<IResponse> {
     const searchQuery = url.searchParams.get('q');
     const searchQueryByEmail = url.searchParams.get('user_email');
 
-    console.log('------ email-api : ', 'user_email', searchQueryByEmail);
     let searchFilter: FilterQuery<unknown> = {};
 
     // If explicit email filter provided, use exact match on user_email

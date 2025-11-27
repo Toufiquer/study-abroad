@@ -1,7 +1,7 @@
 export interface Section6Props {
-  data?: ISectionData | string;
+  data?: ISection6Data | string;
 }
-export interface ISectionData {
+export interface ISection6Data {
   sectionUid: string;
   id: string;
   title: string;
@@ -20,7 +20,7 @@ export interface ISectionData {
   highlights: string[];
 }
 
-export const defaultData: ISectionData = {
+export const defaultDataSection6: ISection6Data = {
   sectionUid: 'section-uid-6',
   id: 'community_section_005',
   title: 'Join the Developer Community',

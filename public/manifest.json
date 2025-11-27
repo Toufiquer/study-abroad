@@ -1,7 +1,7 @@
 {
-  "name": "Study Abroad",
-  "short_name": "Study Abroad",
-  "description": "The Dream came true",
+  "name": "App Generator",
+  "short_name": "App Generator",
+  "description": "Achieve your desired IELTS band score",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

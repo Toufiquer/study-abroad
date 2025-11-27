@@ -1,7 +1,7 @@
 export interface Section2Props {
-   data?: ISectionData | string;
+  data?: ISection2Data | string;
 }
-export interface ISectionData {
+export interface ISection2Data {
   sectionUid: string;
   id: string;
   title: string;
@@ -20,7 +20,7 @@ export interface ISectionData {
   highlights: string[];
 }
 
-export const defaultData: ISectionData = {
+export const defaultDataSection2: ISection2Data = {
   sectionUid: 'section-uid-2',
   id: 'edu_section_001',
   title: 'Master Modern Web Development',

@@ -1,7 +1,7 @@
 export interface Section3Props {
-   data?: ISectionData | string;
+  data?: ISection3Data | string;
 }
-export interface ISectionData {
+export interface ISection3Data {
   sectionUid: string;
   id: string;
   title: string;
@@ -20,7 +20,7 @@ export interface ISectionData {
   highlights: string[];
 }
 
-export const defaultData: ISectionData = {
+export const defaultDataSection3: ISection3Data = {
   sectionUid: 'section-uid-3',
   id: 'prod_section_002',
   title: 'Revolutionary AI-Powered Analytics',

@@ -1,350 +1,469 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown, Sparkles } from 'lucide-react';
-import { useSession } from '@/lib/auth-client';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
+import Image from 'next/image';
 
-const MenuComponentWithSession = () => {
+interface MenuItem {
+  id: number;
+  name: string;
+  path: string;
+  children?: MenuItem[];
+}
+
+interface BrandSettings {
+  brandName: string;
+  logoUrl: string | null;
+  showText: boolean;
+  showLogo: boolean;
+  logoWidth: number;
+}
+
+const defaultBrandSettings: BrandSettings = {
+  brandName: 'TestPrep',
+  logoUrl: null,
+  showText: true,
+  showLogo: false,
+  logoWidth: 40,
+};
+
+interface DesktopMenuItemProps {
+  item: MenuItem;
+  index: number;
+  pathname: string;
+  isActive: (path: string) => boolean;
+  isParentActive: (item: MenuItem) => boolean;
+  level?: number;
+}
+
+interface MobileMenuItemProps {
+  item: MenuItem;
+  index: number;
+  pathname: string;
+  isActive: (path: string) => boolean;
+  isParentActive: (item: MenuItem) => boolean;
+  onNavigate: () => void;
+  openItems: Set<number>;
+  toggleItem: (id: number) => void;
+  level?: number;
+}
+
+const logInMenuData: MenuItem[] = [
+  { id: 1, name: 'About', path: '/about' },
+  {
+    id: 2,
+    name: 'Menu',
+    path: '/menu',
+    children: [
+      {
+        id: 2001,
+        name: 'S.Menu 1',
+        path: '/menu/sub',
+        children: [
+          { id: 20011, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20012, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20013, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+      {
+        id: 2002,
+        name: 'S.Menu 2',
+        path: '/menu/sub',
+        children: [
+          { id: 20021, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20022, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20023, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+      {
+        id: 2003,
+        name: 'S.Menu 3',
+        path: '/menu/sub',
+        children: [
+          { id: 20031, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20032, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20033, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+    ],
+  },
+  { id: 3, name: 'Contact', path: '/contact' },
+  { id: 4, name: 'Service', path: '/service' },
+];
+
+const notLogInMenuData: MenuItem[] = [
+  { id: 1, name: 'About', path: '/about' },
+  {
+    id: 2,
+    name: 'Menu',
+    path: '/menu',
+    children: [
+      {
+        id: 2001,
+        name: 'S.Menu 1',
+        path: '/menu/sub',
+        children: [
+          { id: 20011, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20012, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20013, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+      {
+        id: 2002,
+        name: 'S.Menu 2',
+        path: '/menu/sub',
+        children: [
+          { id: 20021, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20022, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20023, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+      {
+        id: 2003,
+        name: 'S.Menu 3',
+        path: '/menu/sub',
+        children: [
+          { id: 20031, name: 'SS.Menu 1', path: '/menu/sub/sub' },
+          { id: 20032, name: 'SS.Menu 2', path: '/menu/sub/sub' },
+          { id: 20033, name: 'SS.Menu 3', path: '/menu/sub/sub' },
+        ],
+      },
+    ],
+  },
+  { id: 3, name: 'Contact', path: '/contact' },
+  { id: 4, name: 'Service', path: '/service' },
+];
+
+const DesktopMenuItem: React.FC<DesktopMenuItemProps> = ({ item, index, pathname, isActive, isParentActive, level = 0 }) => {
+  const hasChildren = item.children && item.children.length > 0;
+
+  if (!hasChildren) {
+    return (
+      <Link href={item.path}>
+        <motion.div
+          initial={{ opacity: 0, [level === 0 ? 'y' : 'x']: -10 }}
+          animate={{ opacity: 1, [level === 0 ? 'y' : 'x']: 0 }}
+          transition={{ delay: index * 0.03 }}
+          className={`${
+            level === 0 ? 'group relative px-4 py-2 text-sm font-semibold' : 'px-4 py-3 text-sm font-medium'
+          } tracking-wide transition-all duration-300 ${
+            isActive(item.path) ? 'text-sky-300 bg-sky-400/10' : 'text-sky-100 hover:text-sky-300 hover:bg-sky-400/5'
+          }`}
+        >
+          <span className="relative z-10">{item.name}</span>
+          {level === 0 && (
+            <>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-sky-500/20 rounded-lg blur-sm"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              />
+              {isActive(item.path) && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400"
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              )}
+            </>
+          )}
+        </motion.div>
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`relative ${level === 0 ? ' group ' : ' group/nested '}`}>
+      {level === 0 ? (
+        <motion.button
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className={`group relative px-4 py-2 text-sm font-semibold tracking-wide transition-all duration-300 ${
+            isParentActive(item) ? 'text-sky-300' : 'text-sky-100 hover:text-sky-300'
+          }`}
+        >
+          <Link href={item.path} className="relative z-10 flex items-center gap-1">
+            {item.name}
+            <ChevronDown size={16} />
+          </Link>
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-sky-500/20 rounded-lg blur-sm"
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+          {isParentActive(item) && (
+            <motion.div
+              layoutId="activeTab"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-400 via-blue-400 to-sky-400"
+              initial={false}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          )}
+        </motion.button>
+      ) : (
+        <Link href={item.path}>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.03 }}
+            className={`px-4 py-3 text-sm font-medium transition-all duration-300 flex items-center justify-between hover:underline hover:bg-sky-400/5 ${
+              isActive(item.path) ? 'text-sky-300 bg-sky-400/10' : 'text-sky-100 hover:text-sky-300 hover:bg-sky-100'
+            }`}
+          >
+            {item.name}
+            <ChevronDown className="-rotate-90" size={14} />
+          </motion.div>
+        </Link>
+      )}
+
+      <div
+        className={`
+          ${
+            level === 0
+              ? ' absolute top-full left-0 pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible '
+              : ' absolute left-full top-0 pl-0 opacity-0 invisible group-hover/nested:opacity-100 group-hover/nested:visible '
+          }
+          transition-opacity duration-200
+        `}
+      >
+        <div className="min-w-[200px] bg-gradient-to-b from-blue-950/95 via-sky-900/90 to-blue-950/95 backdrop-blur-xl border border-sky-400/30 rounded-lg shadow-[0_8px_32px_rgba(56,189,248,0.2)] ">
+          {item.children?.map((childItem, childIndex) => (
+            <DesktopMenuItem
+              key={childItem.id}
+              item={childItem}
+              index={childIndex}
+              pathname={pathname}
+              isActive={isActive}
+              isParentActive={isParentActive}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MobileMenuItem: React.FC<MobileMenuItemProps> = ({ item, index, pathname, isActive, isParentActive, onNavigate, openItems, toggleItem, level = 0 }) => {
+  const isOpen = openItems.has(item.id);
+  const hasChildren = item.children && item.children.length > 0;
+
+  if (!hasChildren) {
+    return (
+      <Link href={item.path} onClick={onNavigate}>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.03 }}
+          style={{ marginLeft: `${level * 1}rem` }}
+          className={`px-4 ${level === 0 ? 'py-3' : 'py-2.5'} rounded-lg ${
+            level === 0 ? 'text-base font-semibold' : 'text-sm font-medium'
+          } tracking-wide transition-all duration-300 ${
+            isActive(item.path) ? 'text-sky-300 bg-sky-400/10' : 'text-sky-100 hover:text-sky-300 hover:bg-sky-400/5 hover:translate-x-1'
+          }`}
+        >
+          {item.name}
+        </motion.div>
+      </Link>
+    );
+  }
+
+  return (
+    <div style={{ marginLeft: level > 0 ? `${level * 1}rem` : undefined }}>
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.05 }}
+        onClick={() => toggleItem(item.id)}
+        className={`w-full flex items-center justify-between px-4 ${level === 0 ? 'py-3' : 'py-2.5'} rounded-lg ${
+          level === 0 ? 'text-base font-semibold' : 'text-sm font-medium'
+        } tracking-wide transition-all duration-300 ${
+          isParentActive(item) ? 'text-sky-300 bg-sky-400/10' : 'text-sky-100 hover:text-sky-300 hover:bg-sky-400/5'
+        }`}
+      >
+        {item.name}
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+          <ChevronDown size={level === 0 ? 18 : 16} />
+        </motion.div>
+      </motion.button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mt-1 space-y-1 overflow-hidden"
+          >
+            {item.children?.map((childItem, childIndex) => (
+              <MobileMenuItem
+                key={childItem.id}
+                item={childItem}
+                index={childIndex}
+                pathname={pathname}
+                isActive={isActive}
+                isParentActive={isParentActive}
+                onNavigate={onNavigate}
+                openItems={openItems}
+                toggleItem={toggleItem}
+                level={level + 1}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+interface MenuComponentProps {
+  serverMenuData?: MenuItem[];
+  serverBrandSettings?: BrandSettings;
+}
+
+const MenuComponentWithSession = ({ serverMenuData, serverBrandSettings }: MenuComponentProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
-  const [mobileDropdown, setMobileDropdown] = useState<number | null>(null);
-  const session = useSession();
+  const [openMobileItems, setOpenMobileItems] = useState<Set<number>>(new Set());
+
+  const brandSettings = serverBrandSettings || defaultBrandSettings;
   const pathname = usePathname();
+  const session = useSession();
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const menuData = useMemo(() => {
+    let items = serverMenuData && serverMenuData.length > 0 ? [...serverMenuData] : session?.data?.session ? [...logInMenuData] : [...notLogInMenuData];
 
-  useEffect(() => {
-    setIsOpen(false);
-    setMobileDropdown(null);
-  }, [pathname]);
+    items = items.filter(item => item.path !== '/login' && item.path !== '/dashboard');
 
-  const logInMenuData = [
-    { id: 1, name: 'Home', path: '/' },
-    {
-      id: 2,
-      name: 'About',
-      path: '/about',
-      child: [
-        { id: 100201, name: 'About', path: '/about' },
-        { id: 100202, name: 'Our Partners', path: '/about/our-partners' },
-        { id: 100203, name: 'Our Team', path: '/about/our-team' },
-      ],
-    },
-    { id: 3, name: 'Contact', path: '/contact' },
-    { id: 4, name: 'Career', path: '/career' },
-    { id: 5, name: 'Institutions', path: '/institutions' },
-    { id: 6, name: 'Students', path: '/students' },
-    { id: 7, name: 'Study Abroad', path: '/study-abroad' },
-    { id: 8, name: 'Dashboard', path: '/dashboard', highlight: true },
-  ];
+    if (session?.data?.session) {
+      items.push({ id: 9999, name: 'Dashboard', path: '/dashboard' });
+    } else {
+      items.push({ id: 9999, name: 'Login', path: '/login' });
+    }
 
-  const notLogInMenuData = [
-    { id: 1, name: 'Home', path: '/' },
-    {
-      id: 2,
-      name: 'About',
-      path: '/about',
-      child: [
-        { id: 100201, name: 'About', path: '/about' },
-        { id: 100202, name: 'Our Partners', path: '/about/our-partners' },
-        { id: 100203, name: 'Our Team', path: '/about/our-team' },
-      ],
-    },
-    { id: 3, name: 'Contact', path: '/contact' },
-    { id: 4, name: 'Career', path: '/career' },
-    { id: 5, name: 'Institutions', path: '/institutions' },
-    { id: 6, name: 'Students', path: '/students' },
-    { id: 7, name: 'Study Abroad', path: '/study-abroad' },
-    { id: 8, name: 'Dashboard', path: '/dashboard', highlight: true },
-  ];
-  const menuData = session?.data?.session ? logInMenuData : notLogInMenuData;
+    return items;
+  }, [serverMenuData, session]);
 
   const isActive = (path: string) => pathname === path;
 
+  const isParentActive = (item: MenuItem): boolean => {
+    if (pathname === item.path) return true;
+    if (item.children && item.children.length > 0) {
+      return item.children.some(child => isParentActive(child));
+    }
+    return false;
+  };
+
+  const toggleMobileItem = (id: number) => {
+    setOpenMobileItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleNavigate = () => {
+    setIsOpen(false);
+    setOpenMobileItems(new Set());
+  };
+
   return (
-    <>
-      <nav
-        className={`
-          fixed top-0 left-0 w-full z-[100] transition-all duration-500 ease-in-out
-          ${
-            scrolled
-              ? 'bg-gradient-to-r from-blue-950/95 via-sky-900/90 to-blue-950/95 backdrop-blur-2xl shadow-2xl shadow-sky-900/30'
-              : 'bg-gradient-to-r from-blue-950/60 via-sky-900/40 to-blue-950/60 backdrop-blur-xl'
-          }
-          border-b ${scrolled ? 'border-sky-400/40' : 'border-sky-400/20'}
-        `}
-      >
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="flex justify-between items-center h-16 lg:h-20">
-            {/* Logo with Animation */}
-            <Link href="/" className="relative group flex items-center gap-2">
-              <motion.div whileHover={{ rotate: 180, scale: 1.1 }} transition={{ duration: 0.5, ease: 'easeInOut' }}>
-                <Sparkles className="w-6 h-6 lg:w-7 lg:h-7 text-sky-400" />
+    <nav className="fixed top-0 left-0 w-full z-[100] bg-gradient-to-r from-blue-950/60 via-sky-900/40 to-blue-950/60 backdrop-blur-xl border-b border-sky-400/30 shadow-[0_4px_30px_rgba(56,189,248,0.15)]">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16 lg:h-20">
+          <Link href="/" className="group relative flex items-center gap-3">
+            {brandSettings.showLogo && brandSettings.logoUrl && (
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="relative">
+                <Image
+                  width={200}
+                  height={200}
+                  src={brandSettings.logoUrl}
+                  alt={brandSettings.brandName}
+                  style={{ width: `${brandSettings.logoWidth}px`, height: 'auto', maxHeight: '50px' }}
+                  className="object-contain drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]"
+                />
               </motion.div>
-              <span
-                className="
-                  text-xl md:text-2xl lg:text-3xl font-extrabold 
-                  bg-gradient-to-r from-sky-300 via-blue-300 to-sky-200 
-                  bg-clip-text text-transparent
-                  drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]
-                  group-hover:drop-shadow-[0_0_25px_rgba(56,189,248,0.8)]
-                  transition-all duration-300
-                "
-              >
-                Study Abroad
-              </span>
-            </Link>
+            )}
 
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-1 xl:gap-2">
-              {menuData.map(item => (
-                <div
-                  key={item.id}
-                  className="relative"
-                  onMouseEnter={() => item.child && setActiveDropdown(item.id)}
-                  onMouseLeave={() => setActiveDropdown(null)}
+            {brandSettings.showText && (
+              <div className="relative">
+                <motion.span
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="text-xl md:text-2xl lg:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-blue-300 to-sky-200 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)] group-hover:drop-shadow-[0_0_25px_rgba(56,189,248,0.8)] transition-all duration-300"
                 >
-                  {item.child ? (
-                    <button
-                      className={`
-                        group relative px-4 xl:px-5 py-2 rounded-lg
-                        text-sm xl:text-base font-semibold tracking-wide
-                        transition-all duration-300 flex items-center gap-1
-                        ${isActive(item.path) ? 'text-sky-300 bg-sky-400/10' : 'text-sky-100 hover:text-sky-300 hover:bg-sky-400/5'}
-                      `}
-                    >
-                      {item.name}
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.id ? 'rotate-180' : ''}`} />
-                      <span
-                        className="
-                          absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 
-                          bg-gradient-to-r from-transparent via-sky-400 to-transparent
-                          group-hover:w-full transition-all duration-300
-                        "
-                      />
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.path}
-                      className={`
-                        group relative px-4 xl:px-5 py-2 rounded-lg
-                        text-sm xl:text-base font-semibold tracking-wide
-                        transition-all duration-300 flex items-center gap-2
-                        ${
-                          item.highlight
-                            ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/40 hover:shadow-sky-500/60 hover:scale-105'
-                            : isActive(item.path)
-                              ? 'text-sky-300 bg-sky-400/10'
-                              : 'text-sky-100 hover:text-sky-300 hover:bg-sky-400/5'
-                        }
-                      `}
-                    >
-                      {item.name}
-                      {!item.highlight && (
-                        <span
-                          className="
-                            absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 
-                            bg-gradient-to-r from-transparent via-sky-400 to-transparent
-                            group-hover:w-full transition-all duration-300
-                          "
-                        />
-                      )}
-                    </Link>
-                  )}
+                  {brandSettings.brandName}
+                </motion.span>
+                <motion.div
+                  className="absolute -inset-2 bg-gradient-to-r from-sky-400/0 via-blue-400/20 to-sky-400/0 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  initial={false}
+                />
+              </div>
+            )}
+          </Link>
 
-                  {/* Desktop Dropdown */}
-                  <AnimatePresence>
-                    {item.child && activeDropdown === item.id && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="
-                          absolute top-full mt-2 left-0 min-w-[220px]
-                          bg-gradient-to-br from-blue-950/98 via-sky-900/95 to-blue-950/98
-                          backdrop-blur-2xl rounded-xl
-                          border border-sky-400/30 shadow-2xl shadow-sky-900/40
-                          overflow-hidden
-                        "
-                      >
-                        <div className="p-2">
-                          {item.child.map((childItem, index) => (
-                            <motion.div key={childItem.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
-                              <Link
-                                href={childItem.path}
-                                className={`
-                                  block px-4 py-3 rounded-lg text-sm font-medium
-                                  transition-all duration-200
-                                  ${
-                                    isActive(childItem.path)
-                                      ? 'bg-sky-400/20 text-sky-300'
-                                      : 'text-sky-100 hover:bg-sky-400/10 hover:text-sky-300 hover:translate-x-1'
-                                  }
-                                `}
-                              >
-                                {childItem.name}
-                              </Link>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+          <div className="hidden lg:flex items-center gap-2">
+            {menuData.map((item, index) => (
+              <DesktopMenuItem key={item.id} item={item} index={index} pathname={pathname} isActive={isActive} isParentActive={isParentActive} />
+            ))}
+          </div>
+
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="lg:hidden relative p-2 text-sky-100 hover:text-sky-300 transition-colors focus:outline-none group"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-sky-500/20 rounded-lg blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              initial={false}
+            />
+            <motion.div animate={{ rotate: isOpen ? 90 : 0 }} transition={{ duration: 0.3 }}>
+              {isOpen ? <X size={28} /> : <Menu size={28} />}
+            </motion.div>
+          </motion.button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="lg:hidden bg-gradient-to-b from-blue-950/95 via-sky-900/90 to-blue-950/95 backdrop-blur-xl border-t border-sky-400/20 shadow-[0_8px_32px_rgba(56,189,248,0.2)] overflow-hidden"
+          >
+            <div className="flex flex-col p-4 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+              {menuData.map((item, index) => (
+                <MobileMenuItem
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  pathname={pathname}
+                  isActive={isActive}
+                  isParentActive={isParentActive}
+                  onNavigate={handleNavigate}
+                  openItems={openMobileItems}
+                  toggleItem={toggleMobileItem}
+                />
               ))}
             </div>
-
-            {/* Mobile Menu Button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              className="
-                lg:hidden relative p-2 rounded-lg
-                text-sky-100 hover:text-sky-300 hover:bg-sky-400/10
-                transition-all duration-300 focus:outline-none
-              "
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle Menu"
-            >
-              <AnimatePresence mode="wait">
-                {isOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <X size={28} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Menu size={28} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="
-                lg:hidden overflow-hidden
-                bg-gradient-to-b from-blue-950/98 via-sky-900/95 to-blue-950/98
-                backdrop-blur-2xl border-t border-sky-400/20
-                shadow-2xl shadow-sky-900/30
-              "
-            >
-              <div className="container mx-auto px-4 py-4 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                {menuData.map((item, index) => (
-                  <motion.div key={item.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05, duration: 0.3 }}>
-                    {item.child ? (
-                      <div className="space-y-1">
-                        <button
-                          onClick={() => setMobileDropdown(mobileDropdown === item.id ? null : item.id)}
-                          className={`
-                            w-full flex items-center justify-between px-4 py-3.5 rounded-xl
-                            text-base font-semibold tracking-wide
-                            transition-all duration-300 active:scale-[0.98]
-                            ${isActive(item.path) ? 'bg-sky-400/20 text-sky-300' : 'text-sky-100 hover:bg-sky-400/10 hover:text-sky-300'}
-                          `}
-                        >
-                          <span>{item.name}</span>
-                          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${mobileDropdown === item.id ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        <AnimatePresence>
-                          {mobileDropdown === item.id && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden pl-4 space-y-1"
-                            >
-                              {item.child.map(childItem => (
-                                <Link
-                                  key={childItem.id}
-                                  href={childItem.path}
-                                  className={`
-                                    block px-4 py-3 rounded-lg text-sm font-medium
-                                    transition-all duration-200 active:scale-[0.98]
-                                    ${
-                                      isActive(childItem.path)
-                                        ? 'bg-sky-400/20 text-sky-300'
-                                        : 'text-sky-100/90 hover:bg-sky-400/10 hover:text-sky-300 hover:translate-x-1'
-                                    }
-                                  `}
-                                >
-                                  {childItem.name}
-                                </Link>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ) : (
-                      <Link
-                        href={item.path}
-                        className={`
-                          block px-4 py-3.5 rounded-xl text-base font-semibold tracking-wide
-                          transition-all duration-300 active:scale-[0.98]
-                          ${
-                            item.highlight
-                              ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/40 text-center'
-                              : isActive(item.path)
-                                ? 'bg-sky-400/20 text-sky-300'
-                                : 'text-sky-100 hover:bg-sky-400/10 hover:text-sky-300'
-                          }
-                        `}
-                      >
-                        {item.name}
-                      </Link>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      {/* Mobile Backdrop */}
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Spacer */}
-      <div className="h-16 lg:h-20" />
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 };
 
