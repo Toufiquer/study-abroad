@@ -2,11 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { MapPin, GraduationCap, ArrowRight, Clock, DollarSign, ChevronDown, Building2, Globe, Search, Sparkles, BookOpenCheck } from 'lucide-react';
+import { MapPin, GraduationCap, ArrowRight, Clock, DollarSign, ChevronDown, Building2, Globe, Search, BookOpenCheck, Sparkles } from 'lucide-react';
 import { defaultDataSection8, ISection8Data } from './data';
 
-// Simple utility for class merging if not available
+// Simple utility for class merging
 const classNames = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
 
 export interface Section8Props {
@@ -44,6 +45,18 @@ const ClientSection8: React.FC<Section8Props> = ({ data }) => {
 
   const toggleUni = (id: string) => {
     setExpandedUni(expandedUni === id ? null : id);
+  };
+
+  const getApplyUrl = (params: string[]) => {
+    const [country, city, university, subject] = params || [];
+    const queryParams = new URLSearchParams();
+
+    if (country) queryParams.set('country', country);
+    if (city) queryParams.set('City', city);
+    if (university) queryParams.set('University', university);
+    if (subject) queryParams.set('Subject', subject);
+
+    return `/application?${queryParams.toString()}`;
   };
 
   return (
@@ -228,35 +241,33 @@ const ClientSection8: React.FC<Section8Props> = ({ data }) => {
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: idx * 0.05 }}
                                   key={course.id}
-                                  className="group/card relative bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300"
+                                  className="group/card relative bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
                                 >
                                   <div className="mb-4">
                                     <h5 className="font-bold text-slate-900 group-hover/card:text-indigo-600 transition-colors">{course.name}</h5>
                                     <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{course.description}</p>
                                   </div>
 
-                                  <div className="flex flex-wrap gap-2 mb-4">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
-                                      <Clock size={12} className="text-slate-400" />
-                                      {course.duration}
+                                  <div className="space-y-4">
+                                    <div className="flex flex-wrap gap-2">
+                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
+                                        <Clock size={12} className="text-slate-400" />
+                                        {course.duration}
+                                      </div>
+                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                                        <DollarSign size={12} />
+                                        {course.tutionFees}
+                                      </div>
                                     </div>
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
-                                      <DollarSign size={12} />
-                                      {course.tutionFees}
-                                    </div>
-                                  </div>
 
-                                  <button
-                                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-indigo-600 transition-colors"
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      // Handle Apply Action
-                                      console.log('Apply params:', course.applyBtnParms);
-                                    }}
-                                  >
-                                    <span>View Details</span>
-                                    <ArrowRight size={12} />
-                                  </button>
+                                    <Link
+                                      href={getApplyUrl(course.applyBtnParms)}
+                                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-indigo-600 transition-colors"
+                                    >
+                                      <span>Apply Now</span>
+                                      <ArrowRight size={12} />
+                                    </Link>
+                                  </div>
                                 </motion.div>
                               ))}
                             </div>
