@@ -20,6 +20,10 @@ export interface ISection7Data {
   features: string[];
 }
 
+export interface Section7Props {
+  data?: ISection7Data | string;
+}
+
 export const defaultDataSection7: ISection7Data = {
   sectionUid: 'section-uid-7',
   id: 'university_section_007',

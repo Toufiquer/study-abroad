@@ -6,6 +6,7 @@ import { defaultDataSection4, ISection4Data } from '../section-4/data';
 import { defaultDataSection5, ISection5Data } from '../section-5/data';
 import { defaultDataSection6, ISection6Data } from '../section-6/data';
 import { defaultDataSection7, ISection7Data } from '../section-7/data';
+import { defaultDataSection8, ISection8Data } from '../section-8/data';
 
 import MutationSection1 from '../section-1/Mutation';
 import MutationSection2 from '../section-2/Mutation';
@@ -14,6 +15,7 @@ import MutationSection4 from '../section-4/Mutation';
 import MutationSection5 from '../section-5/Mutation';
 import MutationSection6 from '../section-6/Mutation';
 import MutationSection7 from '../section-7/Mutation';
+import MutationSection8 from '../section-8/Mutation';
 
 import QuerySection1 from '../section-1/Query';
 import QuerySection2 from '../section-2/Query';
@@ -22,8 +24,9 @@ import QuerySection4 from '../section-4/Query';
 import QuerySection5 from '../section-5/Query';
 import QuerySection6 from '../section-6/Query';
 import QuerySection7 from '../section-7/Query';
+import QuerySection8 from '../section-8/Query';
 
-export type { ISection1Data, ISection2Data, ISection3Data, ISection4Data, ISection5Data, ISection6Data, ISection7Data };
+export type { ISection1Data, ISection2Data, ISection3Data, ISection4Data, ISection5Data, ISection6Data, ISection7Data, ISection8Data };
 
 export const AllSections = {
   'section-uid-1': { mutation: MutationSection1, query: QuerySection1, data: defaultDataSection1 },
@@ -33,6 +36,7 @@ export const AllSections = {
   'section-uid-5': { mutation: MutationSection5, query: QuerySection5, data: defaultDataSection5 },
   'section-uid-6': { mutation: MutationSection6, query: QuerySection6, data: defaultDataSection6 },
   'section-uid-7': { mutation: MutationSection7, query: QuerySection7, data: defaultDataSection7 },
+  'section-uid-8': { mutation: MutationSection8, query: QuerySection8, data: defaultDataSection8 },
 };
 
 export const AllSectionsKeys = Object.keys(AllSections);
