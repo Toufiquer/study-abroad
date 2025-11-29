@@ -4,8 +4,8 @@
 import React, { useState } from 'react';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import { Activity, Users, Shield, Terminal, Search, Bell, LayoutGrid, Cpu, GitCommit, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { adminData, ModerationItem } from './data';
-import { ModerationAction, SystemOverride } from './Mutation';
+import { defaultDataSection16, ModerationItem } from './data';
+import { ModerationAction, MutationSection16 } from './Mutation';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SidebarItem = ({ icon: Icon, label, active }: { icon: any; label: string; active?: boolean }) => (
   <div
@@ -16,7 +16,7 @@ const SidebarItem = ({ icon: Icon, label, active }: { icon: any; label: string; 
   </div>
 );
 
-const StatCard = ({ metric }: { metric: (typeof adminData.metrics)[0] }) => (
+const StatCard = ({ metric }: { metric: (typeof defaultDataSection16.metrics)[0] }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -61,7 +61,7 @@ const StatCard = ({ metric }: { metric: (typeof adminData.metrics)[0] }) => (
 );
 
 export default function AdminQuery() {
-  const [moderationQueue, setModerationQueue] = useState<ModerationItem[]>(adminData.moderationQueue);
+  const [moderationQueue, setModerationQueue] = useState<ModerationItem[]>(defaultDataSection16.moderationQueue);
 
   const handleResolve = (id: string) => {
     setModerationQueue(prev => prev.filter(item => item.id !== id));
@@ -123,7 +123,7 @@ export default function AdminQuery() {
         <div className="p-8 max-w-7xl mx-auto space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {adminData.metrics.map(metric => (
+            {defaultDataSection16.metrics.map(metric => (
               <StatCard key={metric.id} metric={metric} />
             ))}
           </div>
@@ -161,7 +161,7 @@ export default function AdminQuery() {
 
             {/* Right Column: Logs & Tools */}
             <div className="space-y-6">
-              <SystemOverride />
+              <MutationSection16 />
 
               <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
@@ -171,7 +171,7 @@ export default function AdminQuery() {
                   </h3>
                 </div>
                 <div className="p-4 space-y-2 font-mono text-xs">
-                  {adminData.logs.map(log => (
+                  {defaultDataSection16.logs.map(log => (
                     <div key={log.id} className="flex gap-3 text-zinc-500 hover:bg-white/5 p-2 rounded transition-colors cursor-default">
                       <span className="text-zinc-600 select-none">[{log.time}]</span>
                       <span className={log.type === 'error' ? 'text-red-400' : log.type === 'success' ? 'text-green-400' : 'text-blue-400'}>{log.event}</span>

@@ -25,7 +25,7 @@ export interface Article {
   tags: string[];
 }
 
-export const articleData: Article = {
+export const defaultDataSection15: Article = {
   id: 'art-15-2024',
   title: 'The Future of Quantum User Interfaces',
   subtitle: 'Exploring the intersection of multidimensional design and quantum computing paradigms in modern web experiences.',

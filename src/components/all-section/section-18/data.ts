@@ -26,7 +26,7 @@ export interface OfficeLocation {
   schedule: string;
 }
 
-export const locations: OfficeLocation[] = [
+export const defaultDataSection18: OfficeLocation[] = [
   {
     id: 'loc-nyc',
     name: 'Nexus Prime',

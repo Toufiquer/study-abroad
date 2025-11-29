@@ -5,8 +5,8 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, Clock, Calendar, Hash, Zap } from 'lucide-react';
-import { blogData, categories, BlogPost } from './data';
-import { FilterBar } from './Mutation';
+import { defaultDataSection17, categories, BlogPost } from './data';
+import { MutationSection17 } from './Mutation';
 
 const FeaturedCard = ({ post }: { post: BlogPost }) => {
   return (
@@ -94,10 +94,10 @@ export default function BlogQuery() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const featuredPost = blogData.find(p => p.featured) || blogData[0];
+  const featuredPost = defaultDataSection17.find(p => p.featured) || defaultDataSection17[0];
 
   const filteredPosts = useMemo(() => {
-    return blogData
+    return defaultDataSection17
       .filter(post => !post.featured) // Exclude featured from grid
       .filter(post => {
         const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
@@ -132,7 +132,7 @@ export default function BlogQuery() {
         <FeaturedCard post={featuredPost} />
 
         {/* Filter & Search */}
-        <FilterBar categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} onSearch={setSearchQuery} />
+        <MutationSection17 categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} onSearch={setSearchQuery} />
 
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

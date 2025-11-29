@@ -63,7 +63,7 @@ export const LocationSelector = ({ locations, activeId, onSelect }: LocationList
   );
 };
 
-export const ContactOverlay = ({ activeLocation }: { activeLocation: OfficeLocation }) => {
+export const MutationSection18 = ({ activeLocation }: { activeLocation: OfficeLocation }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (text: string) => {
@@ -123,3 +123,5 @@ export const ContactOverlay = ({ activeLocation }: { activeLocation: OfficeLocat
     </div>
   );
 };
+
+export default MutationSection18;

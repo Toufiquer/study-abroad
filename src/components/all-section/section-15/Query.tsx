@@ -5,8 +5,8 @@ import React from 'react';
 import Image from 'next/image';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Clock, Calendar, Share2, Bookmark, ChevronRight, ArrowUpRight } from 'lucide-react';
-import { articleData, ArticleBlock } from './data';
-import { NewsletterMutation } from './Mutation';
+import { defaultDataSection15, ArticleBlock } from './data';
+import Mutations from './Mutation';
 
 const RenderBlock = ({ block }: { block: ArticleBlock; index: number }) => {
   switch (block.type) {
@@ -96,7 +96,7 @@ export default function ArticleQuery() {
 
       <header className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden">
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0 z-0">
-          <Image src={articleData.heroImage} alt="Hero" fill className="object-cover" priority />
+          <Image src={defaultDataSection15.heroImage} alt="Hero" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-[#0a0a0a]" />
         </motion.div>
 
@@ -108,7 +108,7 @@ export default function ArticleQuery() {
             className="flex items-center justify-center gap-3 mb-6"
           >
             <span className="px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-sm">
-              {articleData.category}
+              {defaultDataSection15.category}
             </span>
           </motion.div>
 
@@ -118,7 +118,7 @@ export default function ArticleQuery() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 text-white bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
           >
-            {articleData.title}
+            {defaultDataSection15.title}
           </motion.h1>
 
           <motion.p
@@ -127,7 +127,7 @@ export default function ArticleQuery() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-2xl text-zinc-300 max-w-3xl mx-auto font-light leading-relaxed"
           >
-            {articleData.subtitle}
+            {defaultDataSection15.subtitle}
           </motion.p>
         </div>
 
@@ -148,11 +148,11 @@ export default function ArticleQuery() {
             <div className="sticky top-32 space-y-8">
               <div className="flex items-center gap-4">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-purple-500/20">
-                  <Image src={articleData.author.avatar} alt={articleData.author.name} fill className="object-cover" />
+                  <Image src={defaultDataSection15.author.avatar} alt={defaultDataSection15.author.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <p className="font-medium text-white">{articleData.author.name}</p>
-                  <p className="text-xs text-zinc-500">{articleData.author.role}</p>
+                  <p className="font-medium text-white">{defaultDataSection15.author.name}</p>
+                  <p className="text-xs text-zinc-500">{defaultDataSection15.author.role}</p>
                 </div>
               </div>
 
@@ -161,18 +161,18 @@ export default function ArticleQuery() {
               <div className="space-y-4 text-sm text-zinc-400">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4" />
-                  <span>{articleData.publishedAt}</span>
+                  <span>{defaultDataSection15.publishedAt}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-4 h-4" />
-                  <span>{articleData.readTime}</span>
+                  <span>{defaultDataSection15.readTime}</span>
                 </div>
               </div>
 
               <div className="pt-8">
                 <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Tags</p>
                 <div className="flex flex-wrap gap-2">
-                  {articleData.tags.map(tag => (
+                  {defaultDataSection15.tags.map(tag => (
                     <span
                       key={tag}
                       className="text-xs bg-zinc-900 border border-zinc-800 px-2 py-1 rounded text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer"
@@ -189,23 +189,23 @@ export default function ArticleQuery() {
             <div className="lg:hidden flex items-center justify-between mb-8 pb-8 border-b border-zinc-800">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                  <Image src={articleData.author.avatar} alt={articleData.author.name} fill className="object-cover" />
+                  <Image src={defaultDataSection15.author.avatar} alt={defaultDataSection15.author.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-white">{articleData.author.name}</p>
+                  <p className="font-medium text-sm text-white">{defaultDataSection15.author.name}</p>
                   <div className="flex gap-2 text-xs text-zinc-500">
-                    <span>{articleData.publishedAt}</span> • <span>{articleData.readTime}</span>
+                    <span>{defaultDataSection15.publishedAt}</span> • <span>{defaultDataSection15.readTime}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {articleData.content.map((block, i) => (
+            {defaultDataSection15.content.map((block, i) => (
               <RenderBlock key={i} block={block} index={i} />
             ))}
 
             <div className="mt-16">
-              <NewsletterMutation />
+              <Mutations />
             </div>
           </article>
 
@@ -213,11 +213,12 @@ export default function ArticleQuery() {
             <div className="sticky top-32 border-l border-zinc-800 pl-6">
               <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-6">On this page</p>
               <ul className="space-y-4 text-sm">
-                {articleData.content
+                {defaultDataSection15.content
                   .filter(b => b.type === 'heading')
                   .map((h, i) => (
                     <li key={i} className="text-zinc-400 hover:text-purple-400 cursor-pointer transition-colors flex items-center gap-2 group">
                       <ChevronRight className="w-3 h-3 opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+
                       {h.content}
                     </li>
                   ))}

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Check, Loader2, Sparkles } from 'lucide-react';
 
-export const NewsletterMutation = () => {
+export const MutationSection15 = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
@@ -76,3 +76,4 @@ export const NewsletterMutation = () => {
     </div>
   );
 };
+export default MutationSection15;

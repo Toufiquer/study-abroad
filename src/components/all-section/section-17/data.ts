@@ -21,7 +21,7 @@ export interface BlogPost {
 
 export const categories = ['All', 'Quantum UI', 'Engineering', 'Design Systems', 'Algorithms'];
 
-export const blogData: BlogPost[] = [
+export const defaultDataSection17: BlogPost[] = [
   {
     id: 'post-1',
     title: 'The Event Horizon: Designing for Non-Linear Navigation',

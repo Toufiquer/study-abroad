@@ -12,7 +12,7 @@ interface FilterBarProps {
   onSearch: (query: string) => void;
 }
 
-export const FilterBar = ({ categories, selectedCategory, onSelectCategory, onSearch }: FilterBarProps) => {
+export const MutationSection17 = ({ categories, selectedCategory, onSelectCategory, onSearch }: FilterBarProps) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
@@ -86,3 +86,5 @@ export const FilterBar = ({ categories, selectedCategory, onSelectCategory, onSe
     </div>
   );
 };
+
+export default MutationSection17;

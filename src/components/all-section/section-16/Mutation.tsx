@@ -108,7 +108,7 @@ export const ModerationAction = ({ item, onResolve }: ActionPanelProps) => {
   );
 };
 
-export const SystemOverride = () => {
+export const MutationSection16 = () => {
   const [active, setActive] = useState(false);
 
   return (
@@ -141,3 +141,4 @@ export const SystemOverride = () => {
     </div>
   );
 };
+export default MutationSection16;

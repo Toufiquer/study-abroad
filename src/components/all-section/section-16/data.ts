@@ -30,7 +30,7 @@ export interface SystemLog {
   type: 'info' | 'success' | 'error';
 }
 
-export const adminData = {
+export const defaultDataSection16 = {
   metrics: [
     { id: 'm1', label: 'Network Velocity', value: '84.2 TB/s', trend: 12.5, status: 'stable' },
     { id: 'm2', label: 'Quantum Entanglement', value: '99.9%', trend: 0.4, status: 'stable' },

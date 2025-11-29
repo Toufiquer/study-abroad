@@ -5,13 +5,13 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Maximize2, Minimize2, ExternalLink, MapPin } from 'lucide-react';
-import { locations, mapStyles } from './data';
-import { LocationSelector, ContactOverlay } from './Mutation';
+import { defaultDataSection18, mapStyles } from './data';
+import { LocationSelector, MutationSection18 } from './Mutation';
 
-export default function LocationQuery() {
-  const [activeId, setActiveId] = useState(locations[0].id);
+export default function QuerySection18() {
+  const [activeId, setActiveId] = useState(defaultDataSection18[0].id);
   const [isExpanded, setIsExpanded] = useState(false);
-  const activeLocation = locations.find(l => l.id === activeId) || locations[0];
+  const activeLocation = defaultDataSection18.find(l => l.id === activeId) || defaultDataSection18[0];
   const [iframeKey, setIframeKey] = useState(0);
 
   // Force re-render iframe on location change to animate the "fly-to"
@@ -55,9 +55,9 @@ export default function LocationQuery() {
               <p className="text-zinc-400 text-sm">Global infrastructure nodes powering the decentralized web. Select a hub to initiate connection.</p>
             </div>
 
-            <LocationSelector locations={locations} activeId={activeId} onSelect={setActiveId} />
+            <LocationSelector locations={defaultDataSection18} activeId={activeId} onSelect={setActiveId} />
 
-            <ContactOverlay activeLocation={activeLocation} />
+            <MutationSection18 activeLocation={activeLocation} />
 
             {/* Location Detail Image */}
             <div className="mt-8 relative aspect-video rounded-2xl overflow-hidden border border-white/10 group">
