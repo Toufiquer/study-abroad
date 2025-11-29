@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Settings, ChevronDown, ChevronRight, ChevronLeft, LogOut } from 'lucide-react';
+import { Home, Settings, ChevronDown, ChevronRight, ChevronLeft, LogOut, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -13,6 +13,9 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFetchSidebar } from './useFetchSidebar';
 import { IDefaultSidebarItem } from './default-items';
+
+// Define allowed admins
+const adminEmail = ['toufiquer.0@gmail.com', 'tec.verse.bd@gmail.com'];
 
 const SidebarMenuButton = ({
   item,
@@ -74,7 +77,7 @@ const SidebarMenuButton = ({
 };
 
 const SidebarChild = ({ child, pathname, onClick }: { child: IDefaultSidebarItem; pathname: string; onClick?: () => void }) => {
-  const isActive = pathname === child.path;
+  const isActive = child.path === pathname;
 
   return (
     <Link
@@ -99,11 +102,41 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const session = useSession();
 
+  const user = session?.data?.user;
+  const email = session?.data?.user?.email || '';
+
+  // MOVED UP: Hook called unconditionally before any return statements
+  const sidebarItems = useFetchSidebar(email);
+
   useEffect(() => {
     if (!session?.data?.session && !session?.isPending) {
       router.push('/login');
     }
   }, [session, router]);
+
+  // ACCESS CONTROL CHECK
+  // If session is loaded, user exists, but email is NOT in the admin list
+  if (!session.isPending && user && !adminEmail.includes(email)) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-900 text-white p-4">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-xl max-w-md w-full text-center shadow-2xl">
+          <ShieldAlert className="w-16 h-16 mx-auto text-red-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+          <p className="text-white/70 mb-6">
+            You do not have permission to access this dashboard.
+            <br />
+            <span className="text-xs mt-2 block opacity-50">Current User: {email}</span>
+          </p>
+          <Button variant="destructive" onClick={async () => await signOut()} className="w-full">
+            Log Out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If loading session
+  if (session.isPending) return null;
 
   const toggleExpand = (id: number) => {
     setExpandedItem(expandedItem === id ? null : id);
@@ -113,10 +146,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     setLoadingLogout(true);
     await signOut();
   };
-
-  const user = session?.data?.user;
-  const email = session?.data?.user?.email || '';
-  const sidebarItems = useFetchSidebar(email);
 
   return (
     <div className="fixed flex max-h-[calc(100vh-65px)] w-full pt-[65px]">
