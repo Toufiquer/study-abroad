@@ -15,7 +15,7 @@ import { useFetchSidebar } from './useFetchSidebar';
 import { IDefaultSidebarItem } from './default-items';
 
 // Define allowed admins
-const adminEmail = ['toufiquer.0@gmail.com', 'tec.verse.bd@gmail.com'];
+const adminEmail = ['toufiquer.0@gmail.com', 'tec.verse.bd@gmail.com', 'jahidhasanavikhan@gmail.com'];
 
 const SidebarMenuButton = ({
   item,
