@@ -132,6 +132,7 @@ function ApplicationFormContent() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // 1. Fetch Data
   useEffect(() => {
     const fetchUniversityData = async () => {
       try {
@@ -199,6 +200,7 @@ function ApplicationFormContent() {
     fetchUniversityData();
   }, []);
 
+  // 2. Initialize from URL (Runs once when data is ready)
   useEffect(() => {
     if (isLoadingData || universityData.length === 0) return;
 
@@ -244,85 +246,80 @@ function ApplicationFormContent() {
     }
   }, [searchParams, isInitialized, isLoadingData, universityData]);
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  // --- FIXED: Removed the 4 problematic useEffects here ---
 
-    if (formData.selectedCountry) {
-      const country = universityData.find(c => c.country === formData.selectedCountry);
-      setAvailableCities(country ? country.cities : []);
-      if (formData.selectedCity && !availableCities.find(c => c.name === formData.selectedCity)) {
-        setFormData(prev => ({ ...prev, selectedCity: '', selectedUniversity: '', selectedSubject: '', selectedCourseIndex: '' }));
-      }
-    } else {
-      setAvailableCities([]);
-    }
-  }, [formData, universityData, isInitialized, availableCities]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (formData.selectedCity) {
-      const city = availableCities.find(c => c.name === formData.selectedCity);
-      setAvailableUniversities(city ? city.universities : []);
-      if (formData.selectedUniversity && !city?.universities.find(u => u.name === formData.selectedUniversity)) {
-        setFormData(prev => ({ ...prev, selectedUniversity: '', selectedSubject: '', selectedCourseIndex: '' }));
-      }
-    } else {
-      setAvailableUniversities([]);
-    }
-  }, [formData, availableCities, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (formData.selectedUniversity) {
-      const uni = availableUniversities.find(u => u.name === formData.selectedUniversity);
-      if (uni) {
-        const uniqueSubjects = Array.from(new Set(uni.courses.map(c => c.subject)));
-        setAvailableSubjects(uniqueSubjects);
-        if (formData.selectedSubject && !uniqueSubjects.includes(formData.selectedSubject)) {
-          setFormData(prev => ({ ...prev, selectedSubject: '', selectedCourseIndex: '' }));
-          setAvailableCourses(uni.courses);
-        } else if (!formData.selectedSubject) {
-          setAvailableCourses(uni.courses);
-        }
-      } else {
-        setAvailableSubjects([]);
-        setAvailableCourses([]);
-      }
-    } else {
-      setAvailableSubjects([]);
-      setAvailableCourses([]);
-    }
-  }, [formData, availableUniversities, isInitialized]);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const uni = availableUniversities.find(u => u.name === formData.selectedUniversity);
-    if (uni) {
-      if (formData.selectedSubject) {
-        const filteredCourses = uni.courses.filter(c => c.subject === formData.selectedSubject);
-        setAvailableCourses(filteredCourses);
-        setFormData(prev => ({ ...prev, selectedCourseIndex: '' }));
-      } else {
-        setAvailableCourses(uni.courses);
-      }
-    }
-  }, [formData, availableUniversities, isInitialized]);
-
+  // --- FIXED: Updated handleInputChange to handle logic ---
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     if (name === 'selectedCountry') {
-      setFormData(prev => ({ ...prev, [name]: value, selectedCity: '', selectedUniversity: '', selectedSubject: '', selectedCourseIndex: '' }));
+      // 1. Update Country
+      const country = universityData.find(c => c.country === value);
+      setAvailableCities(country ? country.cities : []);
+
+      // Reset downstream lists
+      setAvailableUniversities([]);
+      setAvailableSubjects([]);
+      setAvailableCourses([]);
+
+      // Reset downstream form data
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        selectedCity: '',
+        selectedUniversity: '',
+        selectedSubject: '',
+        selectedCourseIndex: '',
+      }));
     } else if (name === 'selectedCity') {
-      setFormData(prev => ({ ...prev, [name]: value, selectedUniversity: '', selectedSubject: '', selectedCourseIndex: '' }));
+      // 2. Update City
+      const city = availableCities.find(c => c.name === value);
+      setAvailableUniversities(city ? city.universities : []);
+
+      // Reset downstream lists
+      setAvailableSubjects([]);
+      setAvailableCourses([]);
+
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        selectedUniversity: '',
+        selectedSubject: '',
+        selectedCourseIndex: '',
+      }));
     } else if (name === 'selectedUniversity') {
-      setFormData(prev => ({ ...prev, [name]: value, selectedSubject: '', selectedCourseIndex: '' }));
+      // 3. Update University
+      const uni = availableUniversities.find(u => u.name === value);
+      if (uni) {
+        const uniqueSubjects = Array.from(new Set(uni.courses.map(c => c.subject)));
+        setAvailableSubjects(uniqueSubjects);
+        setAvailableCourses(uni.courses); // Show all courses by default
+      } else {
+        setAvailableSubjects([]);
+        setAvailableCourses([]);
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        selectedSubject: '',
+        selectedCourseIndex: '',
+      }));
     } else if (name === 'selectedSubject') {
+      // 4. Update Subject (Filter courses)
+      const uni = availableUniversities.find(u => u.name === formData.selectedUniversity);
+      if (uni) {
+        if (value) {
+          const filteredCourses = uni.courses.filter(c => c.subject === value);
+          setAvailableCourses(filteredCourses);
+        } else {
+          setAvailableCourses(uni.courses);
+        }
+      }
+
       setFormData(prev => ({ ...prev, [name]: value, selectedCourseIndex: '' }));
     } else {
+      // 5. Standard Update for other fields
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
