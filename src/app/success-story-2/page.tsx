@@ -278,23 +278,6 @@ export default function SuccessStoriesReel() {
       </div>
 
       <div className="h-screen w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth scrollbar-hide">
-        <section className="h-screen w-full snap-center flex flex-col items-center justify-center relative z-10 text-center px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}>
-            <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-white mb-6">
-              SUCCESS
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400">STORIES</span>
-            </h1>
-            <p className="text-xl text-slate-400 max-w-xl mx-auto mb-12">Scroll down to witness the journey of excellence. One story at a time.</p>
-            <div className="animate-bounce text-slate-500 flex flex-col items-center gap-2">
-              <span className="text-xs uppercase tracking-widest">Scroll</span>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
-          </motion.div>
-        </section>
-
         <div className="relative w-full">
           {vpHeight > 0 && <SnakeLine count={data.length} viewportHeight={vpHeight} />}
 
@@ -302,15 +285,6 @@ export default function SuccessStoriesReel() {
             <ReelStory key={item.sectionUid} item={item} index={index} />
           ))}
         </div>
-
-        <section className="h-screen w-full snap-center flex items-center justify-center bg-slate-900 z-20 relative">
-          <div className="text-center px-4">
-            <h2 className="text-5xl font-bold mb-8">Be The Next Story</h2>
-            <button className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-xl shadow-lg hover:scale-105 transition-transform">
-              Apply Now
-            </button>
-          </div>
-        </section>
       </div>
 
       <style jsx global>{`
