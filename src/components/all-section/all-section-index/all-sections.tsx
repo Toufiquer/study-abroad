@@ -10,6 +10,7 @@ import { defaultDataSection8 } from '../section-8/data';
 import { defaultDataSection9 } from '../section-9/data';
 import { defaultDataSection10 } from '../section-10/data';
 import { defaultDataSection11 } from '../section-11/data';
+import { defaultDataSection12 } from '../section-12/data';
 
 import MutationSection1 from '../section-1/Mutation';
 import MutationSection2 from '../section-2/Mutation';
@@ -22,6 +23,7 @@ import MutationSection8 from '../section-8/Mutation';
 import MutationSection9 from '../section-9/Mutation';
 import MutationSection10 from '../section-10/Mutation';
 import MutationSection11 from '../section-11/Mutation';
+import MutationSection12 from '../section-12/Mutation';
 
 import QuerySection1 from '../section-1/Query';
 import QuerySection2 from '../section-2/Query';
@@ -34,6 +36,7 @@ import QuerySection8 from '../section-8/Query';
 import QuerySection9 from '../section-9/Query';
 import QuerySection10 from '../section-10/Query';
 import QuerySection11 from '../section-11/Query';
+import QuerySection12 from '../section-12/Query';
 
 export const AllSections = {
   'section-uid-1': { mutation: MutationSection1, query: QuerySection1, data: defaultDataSection1 },
@@ -47,6 +50,7 @@ export const AllSections = {
   'section-uid-9': { mutation: MutationSection9, query: QuerySection9, data: defaultDataSection9 },
   'section-uid-10': { mutation: MutationSection10, query: QuerySection10, data: defaultDataSection10 },
   'section-uid-11': { mutation: MutationSection11, query: QuerySection11, data: defaultDataSection11 },
+  'section-uid-12': { mutation: MutationSection12, query: QuerySection12, data: defaultDataSection12 },
 };
 
 export const AllSectionsKeys = Object.keys(AllSections);
