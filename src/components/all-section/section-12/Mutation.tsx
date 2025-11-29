@@ -27,7 +27,7 @@ const MutationSection12 = ({ data, onSubmit }: Section12FormProps) => {
   const handleChange = (field: keyof ISection12Data, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateExperience = (index: number, field: keyof IExperienceItem, value: any) => {
     const updated = [...formData.experiences];
     updated[index] = { ...updated[index], [field]: value };
