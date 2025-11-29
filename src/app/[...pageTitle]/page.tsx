@@ -155,10 +155,14 @@ const constructPathFromParams = (slugs: string[]) => {
 // It tells Next.js which routes to build.
 export async function generateStaticParams() {
   const pages = await getCachedAllPages();
-  return pages.map(page => {
+
+  // 1. FILTER: Ignore the root path ('/') to avoid conflict with app/page.tsx
+  const filteredPages = pages.filter(page => page.path !== '/' && page.path !== '');
+
+  // 2. MAP: Generate slugs for remaining pages
+  return filteredPages.map(page => {
     // Convert string path "/about/us" to array ["about", "us"]
-    // If path is just "/", slug is [] (if using optional catch-all)
-    const slug = page.path === '/' ? [] : page.path.split('/').filter(Boolean);
+    const slug = page.path.split('/').filter(Boolean);
 
     return {
       pageTitle: slug,
