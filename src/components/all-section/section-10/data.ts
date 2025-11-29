@@ -9,7 +9,7 @@ export interface Section10Props {
   data?: ISection10Data | string;
 }
 
-export const defaultDataSection9: ISection10Data = {
+export const defaultDataSection10: ISection10Data = {
   id: 'Section 10 Button Text',
   title: 'Success',
   subTitle: 'Stories',

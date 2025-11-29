@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, Type, AlignLeft, MessageSquare, LayoutTemplate, Sparkles, Quote } from 'lucide-react';
-import { ISection10Data, defaultDataSection9 } from './data';
+import { ISection10Data, defaultDataSection10 } from './data';
 
 export interface Section10FormProps {
   data?: ISection10Data;
@@ -14,8 +14,8 @@ export interface Section10FormProps {
 }
 
 const MutationSection10 = ({ data, onSubmit }: Section10FormProps) => {
-  // Note: Using defaultDataSection9 as the fallback based on the provided data structure
-  const [formData, setFormData] = useState<ISection10Data>({ ...defaultDataSection9 });
+  // Note: Using defaultDataSection10 as the fallback based on the provided data structure
+  const [formData, setFormData] = useState<ISection10Data>({ ...defaultDataSection10 });
 
   useEffect(() => {
     if (data && typeof data !== 'string') {

@@ -3,16 +3,16 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Quote, Sparkles } from 'lucide-react';
-import { ISection10Data, defaultDataSection9, Section10Props } from './data';
+import { ISection10Data, defaultDataSection10, Section10Props } from './data';
 
 const ClientSection10: React.FC<Section10Props> = ({ data }) => {
   const sectionData: ISection10Data = useMemo(() => {
-    if (!data) return defaultDataSection9;
+    if (!data) return defaultDataSection10;
     try {
       return typeof data === 'string' ? JSON.parse(data) : data;
     } catch (e) {
       console.error('Failed to parse section data', e);
-      return defaultDataSection9;
+      return defaultDataSection10;
     }
   }, [data]);
 

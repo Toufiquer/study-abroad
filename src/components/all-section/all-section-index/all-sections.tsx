@@ -1,12 +1,14 @@
 // all-section-index.tsx
-import { defaultDataSection1, ISection1Data } from '../section-1/data';
-import { defaultDataSection2, ISection2Data } from '../section-2/data';
-import { defaultDataSection3, ISection3Data } from '../section-3/data';
-import { defaultDataSection4, ISection4Data } from '../section-4/data';
-import { defaultDataSection5, ISection5Data } from '../section-5/data';
-import { defaultDataSection6, ISection6Data } from '../section-6/data';
-import { defaultDataSection7, ISection7Data } from '../section-7/data';
-import { defaultDataSection8, ISection8Data } from '../section-8/data';
+import { defaultDataSection1 } from '../section-1/data';
+import { defaultDataSection2 } from '../section-2/data';
+import { defaultDataSection3 } from '../section-3/data';
+import { defaultDataSection4 } from '../section-4/data';
+import { defaultDataSection5 } from '../section-5/data';
+import { defaultDataSection6 } from '../section-6/data';
+import { defaultDataSection7 } from '../section-7/data';
+import { defaultDataSection8 } from '../section-8/data';
+import { defaultDataSection9 } from '../section-9/data';
+import { defaultDataSection10 } from '../section-10/data';
 
 import MutationSection1 from '../section-1/Mutation';
 import MutationSection2 from '../section-2/Mutation';
@@ -16,6 +18,8 @@ import MutationSection5 from '../section-5/Mutation';
 import MutationSection6 from '../section-6/Mutation';
 import MutationSection7 from '../section-7/Mutation';
 import MutationSection8 from '../section-8/Mutation';
+import MutationSection9 from '../section-8/Mutation';
+import MutationSection10 from '../section-8/Mutation';
 
 import QuerySection1 from '../section-1/Query';
 import QuerySection2 from '../section-2/Query';
@@ -25,8 +29,8 @@ import QuerySection5 from '../section-5/Query';
 import QuerySection6 from '../section-6/Query';
 import QuerySection7 from '../section-7/Query';
 import QuerySection8 from '../section-8/Query';
-
-export type { ISection1Data, ISection2Data, ISection3Data, ISection4Data, ISection5Data, ISection6Data, ISection7Data, ISection8Data };
+import QuerySection9 from '../section-9/Query';
+import QuerySection10 from '../section-10/Query';
 
 export const AllSections = {
   'section-uid-1': { mutation: MutationSection1, query: QuerySection1, data: defaultDataSection1 },
@@ -37,6 +41,8 @@ export const AllSections = {
   'section-uid-6': { mutation: MutationSection6, query: QuerySection6, data: defaultDataSection6 },
   'section-uid-7': { mutation: MutationSection7, query: QuerySection7, data: defaultDataSection7 },
   'section-uid-8': { mutation: MutationSection8, query: QuerySection8, data: defaultDataSection8 },
+  'section-uid-9': { mutation: MutationSection9, query: QuerySection9, data: defaultDataSection9 },
+  'section-uid-10': { mutation: MutationSection10, query: QuerySection10, data: defaultDataSection10 },
 };
 
 export const AllSectionsKeys = Object.keys(AllSections);
