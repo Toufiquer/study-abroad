@@ -1,257 +1,321 @@
-// Query.tsx
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { Clock, Calendar, Share2, Bookmark, ChevronRight, ArrowUpRight } from 'lucide-react';
-import { defaultDataSection15, ArticleBlock } from './data';
-import Mutations from './Mutation';
+import { Calendar, Clock, ArrowRight, X, User, Quote as QuoteIcon, Sparkles, Hash } from 'lucide-react';
+import { ISection15Data, defaultDataSection15 } from './data';
 
-const RenderBlock = ({ block }: { block: ArticleBlock; index: number }) => {
+interface Section15Props {
+  data?: ISection15Data | string;
+}
+
+const QuerySection15: React.FC<Section15Props> = ({ data }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+
+  // Parse data safely and ensure we handle both array (legacy) and single object (new) structures
+  const sectionData: ISection15Data = useMemo(() => {
+    if (!data) return defaultDataSection15[0];
+    try {
+      const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      // If parsed is an array (from old default), take the first item
+      return Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch (e) {
+      console.error('Failed to parse section data', e);
+      return defaultDataSection15[0];
+    }
+  }, [data]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedArticle) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedArticle]);
+
+  return (
+    <section className="relative w-full py-24 bg-zinc-950 overflow-hidden min-h-screen font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* --- Ambient Background --- */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-indigo-900/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-purple-900/10 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-soft-light" />
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* --- Section Header --- */}
+        <div className="flex flex-col items-center text-center mb-20 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest"
+          >
+            <Sparkles size={12} />
+            <span>{sectionData.badge}</span>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-black text-white tracking-tight"
+          >
+            {sectionData.title} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">{sectionData.subTitle}</span>
+          </motion.h2>
+        </div>
+
+        {/* --- Articles Grid --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sectionData.allData &&
+            sectionData.allData.map((article, index) => (
+              <ArticleCard key={article.id} article={article} index={index} onClick={() => setSelectedArticle(article)} />
+            ))}
+        </div>
+      </div>
+
+      {/* --- Full Article Modal --- */}
+      <AnimatePresence>{selectedArticle && <ArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />}</AnimatePresence>
+    </section>
+  );
+};
+
+// --- Sub-Component: Grid Card ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ArticleCard = ({ article, index, onClick }: { article: any; index: number; onClick: () => void }) => {
+  return (
+    <motion.div
+      layoutId={`card-container-${article.id}`}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ delay: index * 0.1, duration: 0.5, ease: 'easeOut' }}
+      onClick={onClick}
+      className="group cursor-pointer relative flex flex-col h-full bg-zinc-900/40 border border-zinc-800/60 rounded-[2rem] overflow-hidden hover:border-indigo-500/30 hover:bg-zinc-900/60 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-900/10"
+    >
+      {/* Image Area */}
+      <div className="relative h-64 w-full overflow-hidden">
+        <motion.div layoutId={`hero-image-${article.id}`} className="w-full h-full relative">
+          {article.heroImage ? (
+            <Image src={article.heroImage} alt={article.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+          ) : (
+            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+              <Sparkles className="text-zinc-700" size={48} />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-60" />
+        </motion.div>
+
+        {/* Category Badge */}
+        <div className="absolute top-4 left-4 z-10">
+          <span className="px-3 py-1 rounded-full bg-zinc-950/50 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-wider">
+            {article.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex flex-col flex-grow p-6 relative">
+        <div className="space-y-3 mb-6">
+          <motion.h3 layoutId={`title-${article.id}`} className="text-xl font-bold text-zinc-100 leading-snug group-hover:text-indigo-300 transition-colors">
+            {article.title}
+          </motion.h3>
+          <p className="text-zinc-400 text-sm line-clamp-2 leading-relaxed">{article.subtitle}</p>
+        </div>
+
+        {/* Footer Info */}
+        <div className="mt-auto flex items-center justify-between pt-6 border-t border-zinc-800 group-hover:border-zinc-700/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-zinc-700 bg-zinc-800">
+              {article.author.avatar ? (
+                <Image src={article.author.avatar} alt={article.author.name} fill className="object-cover" />
+              ) : (
+                <User size={16} className="m-2 text-zinc-500" />
+              )}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-zinc-200">{article.author.name}</span>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                {article.publishedAt} • {article.readTime}
+              </span>
+            </div>
+          </div>
+
+          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 transform group-hover:-rotate-45">
+            <ArrowRight size={14} />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- Sub-Component: Full Article Modal ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ArticleModal = ({ article, onClose }: { article: any; onClose: () => void }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 overflow-hidden"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-zinc-950/90 backdrop-blur-xl" onClick={onClose} />
+
+      {/* Modal Container */}
+      <motion.div
+        layoutId={`card-container-${article.id}`}
+        className="relative w-full h-full md:h-[90vh] md:max-w-5xl bg-zinc-950 md:rounded-3xl border border-white/5 shadow-2xl overflow-hidden flex flex-col"
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all hover:rotate-90 duration-300"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          {/* Hero Section */}
+          <div className="relative w-full h-[50vh] min-h-[400px]">
+            <motion.div layoutId={`hero-image-${article.id}`} className="w-full h-full relative">
+              {article.heroImage && <Image src={article.heroImage} alt={article.title} fill className="object-cover" priority />}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/60 to-transparent" />
+            </motion.div>
+
+            <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 max-w-4xl">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex items-center gap-4 mb-4">
+                <span className="px-3 py-1 bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider rounded-md">{article.category}</span>
+                <span className="flex items-center gap-1 text-zinc-300 text-xs font-mono bg-black/30 backdrop-blur px-2 py-1 rounded">
+                  <Clock size={12} /> {article.readTime}
+                </span>
+              </motion.div>
+
+              <motion.h1
+                layoutId={`title-${article.id}`}
+                className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 shadow-black drop-shadow-lg"
+              >
+                {article.title}
+              </motion.h1>
+
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex items-center gap-4 text-zinc-300">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-500">
+                    {article.author.avatar ? (
+                      <Image src={article.author.avatar} alt={article.author.name} fill className="object-cover" />
+                    ) : (
+                      <User className="m-2" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{article.author.name}</p>
+                    <p className="text-xs opacity-70">{article.author.role}</p>
+                  </div>
+                </div>
+                <div className="h-8 w-px bg-white/20" />
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar size={14} /> {article.publishedAt}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Article Body */}
+          <div className="px-6 md:px-12 py-12 max-w-4xl mx-auto space-y-12 pb-24">
+            {/* Introduction/Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-xl md:text-2xl font-medium text-zinc-200 leading-relaxed border-l-4 border-indigo-500 pl-6"
+            >
+              {article.subtitle}
+            </motion.p>
+
+            {/* Dynamic Content Rendering */}
+            <div className="space-y-8">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {article.content && article.content.map((block: any, i: number) => <ContentBlock key={i} block={block} index={i} />)}
+            </div>
+
+            {/* Footer Tags */}
+            <div className="pt-12 border-t border-white/10 mt-12">
+              <p className="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-4">Related Topics</p>
+              <div className="flex flex-wrap gap-2">
+                {article.tags &&
+                  article.tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="flex items-center gap-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 text-sm hover:text-white hover:border-indigo-500/50 transition-colors cursor-default"
+                    >
+                      <Hash size={12} className="text-indigo-500" /> {tag}
+                    </span>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// --- Helper: Content Block Renderer ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ContentBlock = ({ block }: { block: any; index: number }) => {
+  const commonAnim = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true },
+    transition: { delay: 0.1, duration: 0.5 },
+  };
+
   switch (block.type) {
     case 'heading':
       return (
-        <motion.h2
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-3xl md:text-4xl font-bold text-white mt-12 mb-6 tracking-tight"
-        >
+        <motion.h3 {...commonAnim} className="text-2xl md:text-3xl font-bold text-white mt-12 mb-6">
           {block.content}
-        </motion.h2>
+        </motion.h3>
       );
-    case 'quote':
+
+    case 'text':
       return (
-        <motion.figure
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="my-12 border-l-4 border-purple-500 pl-6 md:pl-10 py-2 relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent -z-10" />
-          <blockquote className="text-xl md:text-2xl font-serif italic text-zinc-100 leading-relaxed">&quot;{block.content}&quot;</blockquote>
-          <figcaption className="mt-4 text-purple-400 font-medium flex items-center gap-2">
-            <span className="w-8 h-[1px] bg-purple-400/50" />
-            {block.author}
-          </figcaption>
-        </motion.figure>
-      );
-    case 'image':
-      return (
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="my-12 group">
-          <div className="relative aspect-video rounded-2xl overflow-hidden border border-zinc-800">
-            <Image src={block.src} alt={block.alt} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-          {block.caption && <p className="mt-3 text-sm text-zinc-500 text-center font-mono">{block.caption}</p>}
-        </motion.div>
-      );
-    default:
-      return (
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-lg md:text-xl text-zinc-300 leading-relaxed mb-6 font-light"
-        >
+        <motion.p {...commonAnim} className="text-lg text-zinc-400 leading-8">
           {block.content}
         </motion.p>
       );
+
+    case 'quote':
+      return (
+        <motion.div {...commonAnim} className="my-10 relative">
+          <QuoteIcon className="absolute top-[-20px] left-[-10px] text-indigo-500/20 w-16 h-16 transform -scale-x-100" />
+          <blockquote className="relative z-10 text-2xl md:text-3xl font-serif italic text-indigo-100 text-center px-4 md:px-12 leading-tight">
+            &ldquo;{block.content}&rdquo;
+          </blockquote>
+          <div className="text-center mt-6 text-sm font-bold text-indigo-400 uppercase tracking-widest">— {block.author}</div>
+        </motion.div>
+      );
+
+    case 'image':
+      return (
+        <motion.figure {...commonAnim} className="my-8">
+          <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-zinc-900">
+            <Image src={block.src} alt={block.alt} fill className="object-cover" />
+          </div>
+          {block.caption && <figcaption className="text-center text-sm text-zinc-500 mt-3 italic">{block.caption}</figcaption>}
+        </motion.figure>
+      );
+
+    default:
+      return null;
   }
 };
 
-export default function ArticleQuery() {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  const heroY = useTransform(scrollYProgress, [0, 0.2], [0, 150]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 selection:bg-purple-500/30 selection:text-purple-200 overflow-x-hidden">
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-purple-500 origin-left z-50" style={{ scaleX }} />
-
-      <nav className="fixed top-0 w-full z-40 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="font-bold text-xl tracking-tighter flex items-center gap-2">
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
-            SECTION<span className="text-zinc-500">15</span>
-          </div>
-          <div className="flex gap-4">
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
-              <Share2 className="w-5 h-5 text-zinc-400" />
-            </button>
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
-              <Bookmark className="w-5 h-5 text-zinc-400" />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <header className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0 z-0">
-          <Image src={defaultDataSection15.heroImage} alt="Hero" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-[#0a0a0a]" />
-        </motion.div>
-
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex items-center justify-center gap-3 mb-6"
-          >
-            <span className="px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-sm">
-              {defaultDataSection15.category}
-            </span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 text-white bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
-          >
-            {defaultDataSection15.title}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-2xl text-zinc-300 max-w-3xl mx-auto font-light leading-relaxed"
-          >
-            {defaultDataSection15.subtitle}
-          </motion.p>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-zinc-500"
-        >
-          <span className="text-xs uppercase tracking-widest">Scroll to Explore</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-zinc-500 to-transparent" />
-        </motion.div>
-      </header>
-
-      <main className="relative z-20 max-w-7xl mx-auto px-6 pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <aside className="hidden lg:block lg:col-span-3 h-full">
-            <div className="sticky top-32 space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-purple-500/20">
-                  <Image src={defaultDataSection15.author.avatar} alt={defaultDataSection15.author.name} fill className="object-cover" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">{defaultDataSection15.author.name}</p>
-                  <p className="text-xs text-zinc-500">{defaultDataSection15.author.role}</p>
-                </div>
-              </div>
-
-              <div className="w-full h-[1px] bg-zinc-800" />
-
-              <div className="space-y-4 text-sm text-zinc-400">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4" />
-                  <span>{defaultDataSection15.publishedAt}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4" />
-                  <span>{defaultDataSection15.readTime}</span>
-                </div>
-              </div>
-
-              <div className="pt-8">
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Tags</p>
-                <div className="flex flex-wrap gap-2">
-                  {defaultDataSection15.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-zinc-900 border border-zinc-800 px-2 py-1 rounded text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          <article className="col-span-1 lg:col-span-7">
-            <div className="lg:hidden flex items-center justify-between mb-8 pb-8 border-b border-zinc-800">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                  <Image src={defaultDataSection15.author.avatar} alt={defaultDataSection15.author.name} fill className="object-cover" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm text-white">{defaultDataSection15.author.name}</p>
-                  <div className="flex gap-2 text-xs text-zinc-500">
-                    <span>{defaultDataSection15.publishedAt}</span> • <span>{defaultDataSection15.readTime}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {defaultDataSection15.content.map((block, i) => (
-              <RenderBlock key={i} block={block} index={i} />
-            ))}
-
-            <div className="mt-16">
-              <Mutations />
-            </div>
-          </article>
-
-          <div className="hidden lg:block lg:col-span-2">
-            <div className="sticky top-32 border-l border-zinc-800 pl-6">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-6">On this page</p>
-              <ul className="space-y-4 text-sm">
-                {defaultDataSection15.content
-                  .filter(b => b.type === 'heading')
-                  .map((h, i) => (
-                    <li key={i} className="text-zinc-400 hover:text-purple-400 cursor-pointer transition-colors flex items-center gap-2 group">
-                      <ChevronRight className="w-3 h-3 opacity-0 -ml-3 group-hover:opacity-100 group-hover:ml-0 transition-all" />
-
-                      {h.content}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <section className="bg-zinc-900 border-t border-zinc-800 py-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <h3 className="text-2xl font-bold mb-12 text-white flex items-center gap-2">
-            Next from Section 15 <ArrowUpRight className="w-5 h-5 text-purple-500" />
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="group cursor-pointer">
-                <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-zinc-800">
-                  <div className="absolute inset-0 bg-zinc-800 animate-pulse" />
-                  <Image
-                    src={`https://images.unsplash.com/photo-${i === 1 ? '1635070041078-e363dbe005cb' : i === 2 ? '1558655146-d09347e0c766' : '1504639725590-34d0984388bd'}?auto=format&fit=crop&w=800&q=80`}
-                    alt="Related"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <p className="text-purple-400 text-xs font-semibold uppercase mb-2">Algorithm</p>
-                <h4 className="text-lg font-bold text-zinc-200 group-hover:text-white transition-colors">The aesthetics of invisible computation</h4>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
+export default QuerySection15;

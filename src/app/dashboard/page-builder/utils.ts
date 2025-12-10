@@ -3,6 +3,7 @@ export type ItemType = 'section' | 'form' | 'button' | 'title' | 'description' |
 export interface PageContent {
   id: string;
   key: string;
+  name: string;
   type: ItemType;
   heading: string;
   path: string;
@@ -12,6 +13,7 @@ export interface PageContent {
 export const defaultPageContent: PageContent = {
   id: '1',
   key: 'heading',
+  name: 'Name',
   type: 'title',
   heading: 'Heading',
   path: '/heading',
@@ -37,4 +39,3 @@ export const INITIAL_DATA: IPage[] = [
   { id: '5', pageName: 'Office Locations', path: '/contact/locations', isActive: true, content: [] },
   { id: '6', pageName: 'Blog List', path: '/blog', isActive: true, content: [] },
 ];
-

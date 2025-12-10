@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { X, ChevronDown, Search, Check, Loader2, AlertCircle } from 'lucide-react';
+import { X, ChevronDown, Search, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,11 @@ interface IResponseData {
   name: string;
 }
 
+interface CachedData {
+  data: string[];
+  timestamp: number;
+}
+
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 1000;
 
@@ -43,51 +48,100 @@ export default function DynamicSelectField({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
+
+  // New state for tracking fetch time
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const safeValue = useMemo(() => value ?? [], [value]);
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  // Create a unique key for local storage based on the API URL
+  const storageKey = useMemo(() => `dynamic-select-cache-${apiUrl}`, [apiUrl]);
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error(`API Error: ${response.status}`);
-        const json = await response.json();
+  const fetchData = useCallback(
+    async (forceUpdate = false) => {
+      setIsLoading(true);
+      setError(null);
 
-        if (!Array.isArray(json)) {
-          logger.error('API response is not an array');
-          setError('Invalid data format received');
-          setIsLoading(false);
-          return;
-        }
-
-        if (json.length === 0) {
-          setAvailableData([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const mapped = json.map(dataMapper);
-        setAvailableData(Array.from(new Set(mapped)));
-        setIsLoading(false);
-        return;
-      } catch (err) {
-        logger.error(JSON.stringify(err));
-        if (attempt === MAX_RETRIES) {
-          setError('Failed to load options. Try again.');
-          setIsLoading(false);
-        } else {
-          await new Promise(res => setTimeout(res, RETRY_DELAY));
+      // 1. Check Local Storage (if not forcing an update)
+      if (!forceUpdate) {
+        try {
+          const cachedItem = localStorage.getItem(storageKey);
+          if (cachedItem) {
+            const parsed: CachedData = JSON.parse(cachedItem);
+            if (Array.isArray(parsed.data)) {
+              setAvailableData(parsed.data);
+              setLastFetchTime(parsed.timestamp);
+              setIsLoading(false);
+              return; // Exit early, do not fetch
+            }
+          }
+        } catch (e) {
+          console.warn('Error reading from local storage', e);
+          // Fall through to fetch if cache read fails
         }
       }
-    }
-  }, [apiUrl, dataMapper]);
 
+      // 2. Fetch from API
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error(`API Error: ${response.status}`);
+          const json = await response.json();
+
+          if (!Array.isArray(json)) {
+            logger.error('API response is not an array');
+            setError('Invalid data format received');
+            setIsLoading(false);
+            return;
+          }
+
+          if (json.length === 0) {
+            setAvailableData([]);
+            setIsLoading(false);
+            return;
+          }
+
+          const mapped = json.map(dataMapper);
+          const uniqueData = Array.from(new Set(mapped));
+
+          const timestamp = Date.now();
+          setAvailableData(uniqueData);
+          setLastFetchTime(timestamp);
+
+          // Save to Local Storage
+          try {
+            localStorage.setItem(
+              storageKey,
+              JSON.stringify({
+                data: uniqueData,
+                timestamp: timestamp,
+              }),
+            );
+          } catch (storageErr) {
+            console.error('Failed to save to localStorage', storageErr);
+          }
+
+          setIsLoading(false);
+          return;
+        } catch (err) {
+          logger.error(JSON.stringify(err));
+          if (attempt === MAX_RETRIES) {
+            setError('Failed to load options. Try again.');
+            setIsLoading(false);
+          } else {
+            await new Promise(res => setTimeout(res, RETRY_DELAY));
+          }
+        }
+      }
+    },
+    [apiUrl, dataMapper, storageKey],
+  );
+
+  // Initial load
   useEffect(() => {
-    fetchData();
+    fetchData(false);
   }, [fetchData]);
 
   useEffect(() => {
@@ -124,6 +178,11 @@ export default function DynamicSelectField({
     onChange(safeValue.filter(i => i !== item));
   };
 
+  const handleReload = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent dropdown toggle if clicked inside the wrapper area
+    fetchData(true);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) return;
     if (e.key === 'ArrowDown') {
@@ -140,13 +199,35 @@ export default function DynamicSelectField({
     }
   };
 
+  const formatLastUpdated = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className={cn('relative space-y-1.5 w-full max-w-2xl', isOpen && 'mb-64')} ref={wrapperRef}>
-      {label && (
-        <Label htmlFor={id} className="text-white">
-          {label}
-        </Label>
-      )}
+      {/* Header with Label and Refresh Controls */}
+      <div className="flex items-center justify-between">
+        {label && (
+          <Label htmlFor={id} className="text-white">
+            {label}
+          </Label>
+        )}
+
+        <div className="flex items-center gap-2">
+          {lastFetchTime && <span className="text-[10px] text-white/50">Updated: {formatLastUpdated(lastFetchTime)}</span>}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs text-white/70 hover:text-white hover:bg-white/10"
+            onClick={handleReload}
+            disabled={isLoading || readOnly}
+          >
+            <RefreshCw className={cn('h-3 w-3 mr-1', isLoading && 'animate-spin')} />
+            Reload
+          </Button>
+        </div>
+      </div>
 
       <div
         id={id}
@@ -180,13 +261,12 @@ export default function DynamicSelectField({
               />
             </div>
           </div>
-
-          <div className="max-h-60 overflow-y-auto p-1">
+          <div className="max-h-[200px] overflow-y-auto p-1 pb-2">
             {error ? (
               <div className="text-center text-sm text-rose-300 py-3 space-y-2">
                 <AlertCircle className="w-5 h-5 mx-auto" />
                 <span>{error}</span>
-                <Button variant="outlineWater" size="sm" onClick={fetchData}>
+                <Button variant="outline" size="sm" onClick={() => fetchData(true)} className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
                   Retry
                 </Button>
               </div>

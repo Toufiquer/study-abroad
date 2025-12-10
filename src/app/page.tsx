@@ -8,14 +8,13 @@
 
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
-import { MousePointer2, Type, Layers, MonitorPlay, ImageIcon } from 'lucide-react';
+import { Type, Layers } from 'lucide-react';
 
 // Import your existing component maps
 import { AllSections, AllSectionsKeys } from '@/components/all-section/all-section-index/all-sections';
 import { AllForms, AllFormsKeys } from '@/components/all-form/all-form-index/all-form';
-import { AllTags, AllTagsKeys } from '@/components/all-tags/all-tags-index/all-tags';
 
-import { ItemType, PageContent } from '@/app/dashboard/page-builder/utils';
+import { PageContent } from '@/app/dashboard/page-builder/utils';
 import { getAllPages } from './api/page-builder/v1/controller'; // Check relative path if this file is in src/app
 
 // --- Types ---
@@ -40,35 +39,10 @@ interface NormalizedPage {
   [key: string]: any;
 }
 
-// --- Component Mappings ---
-// (Identical to your dynamic page to ensure consistent rendering)
-const AllTitles = AllTags;
-const AllTitlesKeys = AllTagsKeys;
-const AllDescriptions = AllTags;
-const AllDescriptionsKeys = AllTagsKeys;
-const AllParagraphs = AllTags;
-const AllParagraphsKeys = AllTagsKeys;
-const AllSliders = AllTags;
-const AllSlidersKeys = AllTagsKeys;
-const AllTagSliders = AllTags;
-const AllTagSlidersKeys = AllTagsKeys;
-const AllLogoSliders = AllTags;
-const AllLogoSlidersKeys = AllTagsKeys;
-const AllGalleries = AllTags;
-const AllGalleriesKeys = AllTagsKeys;
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const COMPONENT_MAP: Record<ItemType, { collection: any; keys: string[]; label: string; icon: any }> = {
-  button: { collection: AllTags, keys: AllTagsKeys, label: 'Tags', icon: MousePointer2 },
+const COMPONENT_MAP: Record<string, { collection: any; keys: string[]; label: string; icon: any }> = {
   form: { collection: AllForms, keys: AllFormsKeys, label: 'Forms', icon: Type },
   section: { collection: AllSections, keys: AllSectionsKeys, label: 'Sections', icon: Layers },
-  title: { collection: AllTitles, keys: AllTitlesKeys, label: 'Title', icon: Type },
-  description: { collection: AllDescriptions, keys: AllDescriptionsKeys, label: 'Description', icon: Type },
-  paragraph: { collection: AllParagraphs, keys: AllParagraphsKeys, label: 'Paragraph', icon: Type },
-  sliders: { collection: AllSliders, keys: AllSlidersKeys, label: 'Sliders', icon: MonitorPlay },
-  tagSliders: { collection: AllTagSliders, keys: AllTagSlidersKeys, label: 'Tag Slider', icon: MonitorPlay },
-  logoSliders: { collection: AllLogoSliders, keys: AllLogoSlidersKeys, label: 'Logo Slider', icon: MonitorPlay },
-  gellery: { collection: AllGalleries, keys: AllGalleriesKeys, label: 'Gallery', icon: ImageIcon },
 };
 
 // --- Data Fetching Logic (Cached) ---
@@ -116,6 +90,7 @@ function getNormalizedPages(rawPages: any[]): NormalizedPage[] {
 
 // --- Component: SSR Item Renderer ---
 const SSRItemRenderer = ({ item }: { item: PageContent }) => {
+  // Check if type exists in our current map
   if (!item.type || !COMPONENT_MAP[item.type]) return null;
 
   const mapEntry = COMPONENT_MAP[item.type];

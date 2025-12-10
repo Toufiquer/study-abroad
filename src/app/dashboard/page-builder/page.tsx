@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Edit, Trash2, Eye, ExternalLink, FolderOpen, Layout, X, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, ExternalLink, FolderOpen, Layout, X, AlertTriangle, RefreshCw, Database } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+// Assuming IPage is in your utils, but I will define a local interface to ensure TS works with the fix
 import { useGetPagesQuery, useAddPageMutation, useUpdatePageMutation, useDeletePageMutation } from '@/redux/features/page-builder/pageBuilderSlice';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 // Normalized Interface to handle inconsistent API data
 interface IPage {
@@ -23,7 +24,7 @@ const Page = () => {
   // Redux hooks
   // Added 'refetch' to manually reload data if needed
   const { data: pagesData, isLoading, error, refetch } = useGetPagesQuery({ page: 1, limit: 100 });
-  console.log('pagesData : ', pagesData);
+
   const [addPage, { isLoading: isAdding }] = useAddPageMutation();
   const [updatePage] = useUpdatePageMutation();
   const [deletePage] = useDeletePageMutation();
@@ -140,6 +141,9 @@ const Page = () => {
 
   const handleLiveLink = (path: string) => {
     window.open(path, '_blank');
+  };
+  const handleFormDataPage = (path: string) => {
+    window.open(`/dashboard/page-builder/form-data?pathTitle=${path}`, '_blank');
   };
 
   const handleToggleActive = async (page: IPage) => {
@@ -297,7 +301,7 @@ const Page = () => {
 
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-                        <div className="w-full flex items-center justify-between">
+                        <div className="w-full flex flex-col gap-2 items-start justify-between">
                           <p
                             className="text-xs font-mono text-slate-400 bg-black/20 inline-block px-2 py-1 rounded border border-white/5 max-w-[120px] truncate"
                             title={page.path}
@@ -317,6 +321,15 @@ const Page = () => {
 
                               <Button size="sm" variant="outlineGlassy" className="min-w-1" onClick={() => handleLiveLink(page.path)} title="Visit Live Page">
                                 <ExternalLink className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outlineGlassy"
+                                className="min-w-1"
+                                onClick={() => handleFormDataPage(page.path)}
+                                title="Visit Live Page"
+                              >
+                                <Database className="h-4 w-4" />
                               </Button>
 
                               <Button

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Eye, Edit2, Trash2, Plus, GripVertical, Save, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Eye, Edit2, Trash2, Plus, GripVertical, Save, ChevronDown, ChevronRight, Loader2, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,10 @@ import {
   useDeleteSidebarMutation,
   useBulkUpdateSidebarsMutation,
 } from '@/redux/features/sidebars/sidebarsSlice';
-import { DragState, iconMap, iconOptions, SidebarItem, SortableItemProps } from './utils';
+
+// --- Updated Import ---
+import { iconMap, iconOptions } from '@/components/all-icons/all-icons-jsx';
+import { DragState, SidebarItem, SortableItemProps } from './utils';
 import { logger } from 'better-auth';
 
 function SortableItem({
@@ -145,8 +148,10 @@ export default function SiteMenuPage() {
   const [addParentItem, setAddParentItem] = useState<SidebarItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<SidebarItem | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+
   const [formData, setFormData] = useState({ name: '', path: '', iconName: 'Menu' });
   const [collapsedItems, setCollapsedItems] = useState<Set<number>>(new Set());
+  const [iconSearch, setIconSearch] = useState('');
 
   const [dragState, setDragState] = useState<DragState>({
     activeId: null,
@@ -156,21 +161,39 @@ export default function SiteMenuPage() {
     originalIndex: -1,
   });
 
+  // Filter icons based on search
+  const filteredIcons = useMemo(() => {
+    if (!iconSearch) return iconOptions.slice(0, 100);
+    return iconOptions.filter(i => i.toLowerCase().includes(iconSearch.toLowerCase()));
+  }, [iconSearch]);
+
   useEffect(() => {
     if (sidebarData?.data?.sidebars) {
-      const formattedData = sidebarData.data.sidebars.map((item: SidebarItem) => ({
-        ...item,
-        icon: iconMap[item.iconName || 'Menu'] || iconMap.Menu,
-        children: item.children?.map(child => ({
-          ...child,
-          icon: iconMap[child.iconName || 'Menu'] || iconMap.Menu,
-        })),
-      }));
+      // Helper to map DB item to State Item
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapItem = (item: any): SidebarItem => {
+        const IconComp = iconMap[item.iconName || 'Menu'] || iconMap.Menu;
+        return {
+          ...item,
+          // Render the component
+          icon: <IconComp size={18} />,
+          children: item.children?.map(mapItem),
+        };
+      };
+
+      const formattedData = sidebarData.data.sidebars.map(mapItem);
       setMenuItems(formattedData);
       setOriginalData(JSON.parse(JSON.stringify(formattedData)));
       setHasChanges(false);
     }
   }, [sidebarData]);
+
+  // Reset icon search on dialog close
+  useEffect(() => {
+    if (!editItem && !isAddingNew && !addParentItem) {
+      setIconSearch('');
+    }
+  }, [editItem, isAddingNew, addParentItem]);
 
   useEffect(() => {
     const compareItems = (items1: SidebarItem[], items2: SidebarItem[]): boolean => {
@@ -201,14 +224,8 @@ export default function SiteMenuPage() {
   }, [menuItems, originalData]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const updateSlNo = (items: SidebarItem[]): SidebarItem[] => {
@@ -296,13 +313,7 @@ export default function SiteMenuPage() {
     const { active, over } = event;
 
     if (!over) {
-      setDragState({
-        activeId: null,
-        overId: null,
-        activeItem: null,
-        originalParentId: null,
-        originalIndex: -1,
-      });
+      handleDragCancel();
       return;
     }
 
@@ -310,13 +321,7 @@ export default function SiteMenuPage() {
     const overId = over.id.toString();
 
     if (activeId === overId) {
-      setDragState({
-        activeId: null,
-        overId: null,
-        activeItem: null,
-        originalParentId: null,
-        originalIndex: -1,
-      });
+      handleDragCancel();
       return;
     }
 
@@ -324,13 +329,7 @@ export default function SiteMenuPage() {
     const overResult = overId === 'drop-zone-top' ? null : findItemById(overId);
 
     if (!activeResult) {
-      setDragState({
-        activeId: null,
-        overId: null,
-        activeItem: null,
-        originalParentId: null,
-        originalIndex: -1,
-      });
+      handleDragCancel();
       return;
     }
 
@@ -403,13 +402,7 @@ export default function SiteMenuPage() {
       return updateSlNo(newItems);
     });
 
-    setDragState({
-      activeId: null,
-      overId: null,
-      activeItem: null,
-      originalParentId: null,
-      originalIndex: -1,
-    });
+    handleDragCancel();
   };
 
   const handleDragCancel = () => {
@@ -492,12 +485,13 @@ export default function SiteMenuPage() {
         const updatedChildren = (parentItem.children ?? [])
           .map(child => {
             if (child.sl_no === editItem.sl_no) {
+              const IconComp = iconMap[formData.iconName] || iconMap.Menu;
               return {
                 ...child,
                 name: formData.name,
                 path: formData.path,
                 iconName: formData.iconName,
-                icon: iconMap[formData.iconName] || iconMap.Menu,
+                icon: <IconComp size={18} />,
               };
             }
             return child;
@@ -565,6 +559,8 @@ export default function SiteMenuPage() {
       return;
     }
 
+    const IconComp = iconMap[formData.iconName] || iconMap.Menu;
+
     setMenuItems(items =>
       updateSlNo(
         items.map(item => {
@@ -574,7 +570,7 @@ export default function SiteMenuPage() {
               sl_no: item.sl_no * 10 + children.length + 1,
               name: formData.name,
               path: formData.path,
-              icon: iconMap[formData.iconName] || iconMap.Menu,
+              icon: <IconComp size={18} />,
               iconName: formData.iconName,
             };
             return { ...item, children: [...children, newChild] };
@@ -614,6 +610,44 @@ export default function SiteMenuPage() {
       toast.error('Failed to save menu data', { toastId: `error-submit-${Date.now()}` });
     }
   };
+
+  // Helper for rendering Icon Grid with Names
+  const renderIconGrid = () => (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Input
+          value={iconSearch}
+          onChange={e => setIconSearch(e.target.value)}
+          placeholder="Search icons..."
+          className="pl-8 h-8 bg-white/5 border-white/10 text-xs text-white"
+        />
+      </div>
+      <ScrollArea className="h-48 border border-white/10 rounded-lg p-2 bg-white/5">
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+          {filteredIcons.map(iconName => {
+            const IconComp = iconMap[iconName];
+            if (!IconComp) return null;
+            return (
+              <button
+                key={iconName}
+                type="button"
+                onClick={() => setFormData({ ...formData, iconName: iconName })}
+                className={`flex flex-col items-center justify-center p-2 rounded hover:bg-white/20 gap-1 transition-all h-16 hover:text-white hover:border border-slate-100/50 ${
+                  formData.iconName === iconName ? 'bg-blue-600 text-white scale-105' : 'text-gray-400'
+                }`}
+                title={iconName}
+              >
+                <IconComp size={18} />
+                <span className="text-[10px] truncate w-full text-center leading-none">{iconName}</span>
+              </button>
+            );
+          })}
+        </div>
+        {filteredIcons.length === 0 && <div className="text-center text-gray-500 text-xs py-8">No icons found</div>}
+      </ScrollArea>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -788,23 +822,7 @@ export default function SiteMenuPage() {
             </div>
             <div>
               <Label className="text-white mb-2">Icon</Label>
-              <ScrollArea className="w-full h-48 pr-1">
-                <div className="grid grid-cols-4 gap-2 p-2">
-                  {iconOptions.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, iconName: icon })}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
-                        formData.iconName === icon ? 'bg-blue-500/30 border-2 border-blue-400' : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="text-white">{iconMap[icon]}</div>
-                      <span className="text-xs text-gray-300 truncate w-full text-center">{icon}</span>
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
+              {renderIconGrid()}
             </div>
             <div className="w-full flex items-center justify-end">
               <Button onClick={handleEditSave} variant="outlineGlassy" size="sm">
@@ -841,23 +859,7 @@ export default function SiteMenuPage() {
             </div>
             <div>
               <Label className="text-white mb-2">Icon</Label>
-              <ScrollArea className="w-full h-48 pr-1">
-                <div className="grid grid-cols-4 gap-2 p-2">
-                  {iconOptions.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, iconName: icon })}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
-                        formData.iconName === icon ? 'bg-blue-500/30 border-2 border-blue-400' : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="text-white">{iconMap[icon]}</div>
-                      <span className="text-xs text-gray-300 truncate w-full text-center">{icon}</span>
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
+              {renderIconGrid()}
             </div>
             <div className="w-full flex justify-end">
               <Button onClick={handleAddNew} variant="outlineGlassy">
@@ -894,23 +896,7 @@ export default function SiteMenuPage() {
             </div>
             <div>
               <Label className="text-white mb-2">Icon</Label>
-              <ScrollArea className="w-full h-48 pr-1">
-                <div className="grid grid-cols-4 gap-2 p-2">
-                  {iconOptions.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, iconName: icon })}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-md transition-all ${
-                        formData.iconName === icon ? 'bg-blue-500/30 border-2 border-blue-400' : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="text-white">{iconMap[icon]}</div>
-                      <span className="text-xs text-gray-300 truncate w-full text-center">{icon}</span>
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
+              {renderIconGrid()}
             </div>
             <div className="w-full flex items-center justify-end">
               <Button onClick={handleAddChild} variant="outlineGlassy" size="sm">

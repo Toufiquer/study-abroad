@@ -132,9 +132,7 @@ export default function ComingSoon() {
             </Link>
           </div>
 
-          <div className="text-white/60 text-xs sm:text-sm pt-8">
-            Copyright {new Date().getFullYear()} | All Rights Reserved - Template by Future Nest Abroad
-          </div>
+          <div className="text-white/60 text-xs sm:text-sm pt-8">Copyright {new Date().getFullYear()} | All Rights Reserved - Template by Tec Verse</div>
         </div>
       </div>
     </div>

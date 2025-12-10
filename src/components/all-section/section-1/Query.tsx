@@ -6,8 +6,9 @@ const QuerySection1 = ({ data }: Section1Props) => {
   if (data && typeof data === 'string') {
     sectionData = JSON.parse(data) as ISection1Data;
   }
+
   return (
-    <div className="relative overflow-hidden  bg-white/5 backdrop-blur-sm border border-white/10 shadow-xl">
+    <div className="relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 shadow-xl">
       <div className="grid lg:grid-cols-2 gap-6 p-6">
         <div className="relative h-64 lg:h-full rounded-xl overflow-hidden shadow-lg">
           {sectionData?.image && <Image src={sectionData.image} alt={sectionData.title || 'Event Venue'} fill className="object-cover" priority />}
@@ -28,22 +29,28 @@ const QuerySection1 = ({ data }: Section1Props) => {
           <p className="text-gray-300 text-sm leading-relaxed">{sectionData.description}</p>
 
           <div className="flex flex-wrap gap-3">
-            <button className="px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold">
+            <button className="px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity">
               {sectionData.buttonPrimary}
             </button>
-            <button className="px-6 py-2 rounded-lg bg-white/5 border border-white/20 text-white text-sm font-semibold">{sectionData.buttonSecondary}</button>
+            <button className="px-6 py-2 rounded-lg bg-white/5 border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
+              {sectionData.buttonSecondary}
+            </button>
           </div>
 
           <div className="flex items-center gap-3 pt-3 border-t border-white/10">
             <div className="flex -space-x-2">
-              {[1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-slate-900 flex items-center justify-center text-white text-xs font-semibold"
-                >
-                  {i}
+              {sectionData.usersImages && sectionData.usersImages.length > 0 ? (
+                sectionData.usersImages.map((imgUrl, i) => (
+                  <div key={i} className="relative w-8 h-8 rounded-full border-2 border-slate-900 overflow-hidden bg-slate-800">
+                    <Image src={imgUrl} alt={`Student ${i + 1}`} fill className="object-cover" />
+                  </div>
+                ))
+              ) : (
+                // Fallback if no images exist
+                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center">
+                  <span className="text-xs text-gray-500">?</span>
                 </div>
-              ))}
+              )}
             </div>
             <div>
               <p className="text-white font-semibold text-sm">{sectionData.studentCount}</p>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Settings, ChevronDown, ChevronRight, ChevronLeft, LogOut, ShieldAlert } from 'lucide-react';
+import { Home, Settings, ChevronDown, ChevronRight, ChevronLeft, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -13,9 +13,37 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFetchSidebar } from './useFetchSidebar';
 import { IDefaultSidebarItem } from './default-items';
+import HasAccess from './hasAccess';
 
-// Define allowed admins
-const adminEmail = ['toufiquer.0@gmail.com', 'tec.verse.bd@gmail.com', 'jahidhasanavikhan@gmail.com'];
+// --- Components ---
+
+const LoadingOverlay = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 bg-linear-to-br from-indigo-500 via-purple-500 to-blue-500 blur-sm" />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      className="relative z-10 flex flex-col items-center justify-center gap-4 p-8 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl"
+    >
+      <div className="relative">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          className="w-16 h-16 rounded-full border-4 border-white/30 border-t-white"
+        />
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-2 w-12 h-12 rounded-full border-4 border-transparent border-b-purple-200"
+        />
+      </div>
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-white font-medium tracking-wider">
+        Authenticating...
+      </motion.p>
+    </motion.div>
+  </div>
+);
 
 const SidebarMenuButton = ({
   item,
@@ -77,7 +105,7 @@ const SidebarMenuButton = ({
 };
 
 const SidebarChild = ({ child, pathname, onClick }: { child: IDefaultSidebarItem; pathname: string; onClick?: () => void }) => {
-  const isActive = child.path === pathname;
+  const isActive = pathname === child.path;
 
   return (
     <Link
@@ -102,41 +130,21 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const session = useSession();
 
+  const isPending = session?.isPending;
+  const isAuthenticated = !!session?.data?.session;
   const user = session?.data?.user;
-  const email = session?.data?.user?.email || '';
+  const email = user?.email || '';
 
-  // MOVED UP: Hook called unconditionally before any return statements
-  const sidebarItems = useFetchSidebar(email);
-
+  // Handle Authentication Redirects
   useEffect(() => {
-    if (!session?.data?.session && !session?.isPending) {
+    // Only redirect if explicitly not pending and no session exists
+    if (!isPending && !isAuthenticated) {
       router.push('/login');
     }
-  }, [session, router]);
+  }, [isPending, isAuthenticated, router]);
 
-  // ACCESS CONTROL CHECK
-  // If session is loaded, user exists, but email is NOT in the admin list
-  if (!session.isPending && user && !adminEmail.includes(email)) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-900 text-white p-4">
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-xl max-w-md w-full text-center shadow-2xl">
-          <ShieldAlert className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-white/70 mb-6">
-            You do not have permission to access this dashboard.
-            <br />
-            <span className="text-xs mt-2 block opacity-50">Current User: {email}</span>
-          </p>
-          <Button variant="destructive" onClick={async () => await signOut()} className="w-full">
-            Log Out
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // If loading session
-  if (session.isPending) return null;
+  // Use the hook - it is safe now as layout handles protection
+  const sidebarItems = useFetchSidebar(email);
 
   const toggleExpand = (id: number) => {
     setExpandedItem(expandedItem === id ? null : id);
@@ -145,8 +153,20 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const handleLogout = async () => {
     setLoadingLogout(true);
     await signOut();
+    router.push('/login');
   };
 
+  // 1. Loading State
+  if (isPending) {
+    return <LoadingOverlay />;
+  }
+
+  // 2. Unauthenticated State (Waiting for redirect or null)
+  if (!isAuthenticated) {
+    return null; // or <LoadingOverlay /> if you want to keep the loader until route change completes
+  }
+
+  // 3. Authenticated Dashboard State
   return (
     <div className="fixed flex max-h-[calc(100vh-65px)] w-full pt-[65px]">
       <div className="fixed inset-0 bg-linear-to-br from-indigo-500 via-purple-500 to-blue-500 -z-10" />
@@ -169,13 +189,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         <div className={`transition-all duration-300 mb-6 ${isCollapsed ? 'text-center' : ''}`}>
-          <h1 className="text-xl font-bold text-white">{isCollapsed ? 'DB' : 'Dashboard'}</h1>
+          <h1 className="text-xl font-bold text-white tracking-tight">{isCollapsed ? 'DB' : 'Dashboard'}</h1>
         </div>
 
         <Separator className="bg-white/10 mb-4" />
 
-        <ScrollArea className="flex-1 overflow-visible">
-          <nav className="flex flex-col space-y-2 pr-3 overflow-visible">
+        <ScrollArea className="w-full h-[70vh]">
+          <nav className="flex flex-col space-y-2 pr-3 overflow-visible pb-4">
             {sidebarItems.map(item => (
               <div key={item.id}>
                 {item.children ? (
@@ -233,7 +253,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content */}
       <motion.main initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex-1 md:pb-0 pb-20 text-white">
         <ScrollArea className="w-full h-[calc(100vh-65px)]">
-          <div className="lg:p-10 p-4 pb-12">{children}</div>
+          <div className="lg:p-10 p-4 pb-12">
+            <HasAccess>{children}</HasAccess>
+          </div>
         </ScrollArea>
       </motion.main>
 

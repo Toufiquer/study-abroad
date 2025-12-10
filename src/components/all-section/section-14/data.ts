@@ -12,8 +12,10 @@ export interface IEvent {
 export interface ISection14Data {
   id: string;
   title: string;
+  badge: string;
   subTitle: string;
   description: string;
+  categories: string[];
   events: IEvent[];
 }
 
@@ -24,15 +26,17 @@ export interface Section14Props {
 export const defaultDataSection14: ISection14Data = {
   id: 'section-14-get-together',
   title: 'Community',
+  badge: 'Get Together',
   subTitle: 'Gatherings',
   description: 'Join our vibrant community events. Connect, learn, and grow together in spaces designed for collaboration.',
+  categories: ['Workshop', 'Conference', 'Hackathon'],
   events: [
     {
       id: 'evt-1',
       title: 'Annual Tech Summit',
       date: 'Oct 15, 2024',
       location: 'San Francisco, CA',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=1000',
+      image: 'https://i.ibb.co.com/KpGnqS3D/nature.jpg',
       category: 'Conference',
       description: 'A full day of keynotes, workshops, and networking with industry leaders.',
       actionText: 'Register Now',
@@ -42,7 +46,7 @@ export const defaultDataSection14: ISection14Data = {
       title: 'Design Systems Workshop',
       date: 'Nov 02, 2024',
       location: 'Online / Zoom',
-      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=1000',
+      image: 'https://i.ibb.co.com/KpGnqS3D/nature.jpg',
       category: 'Workshop',
       description: 'Deep dive into building scalable UI libraries with Figma and React.',
       actionText: 'Join Waitlist',
@@ -52,7 +56,7 @@ export const defaultDataSection14: ISection14Data = {
       title: 'Winter Hackathon',
       date: 'Dec 10, 2024',
       location: 'London, UK',
-      image: 'https://images.unsplash.com/photo-1504384308090-c54be3855833?auto=format&fit=crop&q=80&w=1000',
+      image: 'https://i.ibb.co.com/KpGnqS3D/nature.jpg',
       category: 'Hackathon',
       description: '48 hours of coding, pizza, and innovation. Open to all skill levels.',
       actionText: 'Apply to Hack',

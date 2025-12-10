@@ -12,6 +12,7 @@ export interface ISection1Data {
   buttonSecondary: string;
   studentCount: string;
   enrollmentText: string;
+  usersImages: string[];
 }
 
 export const defaultDataSection1: ISection1Data = {
@@ -26,4 +27,5 @@ export const defaultDataSection1: ISection1Data = {
   buttonSecondary: 'View Details',
   studentCount: '2.5k+ Students',
   enrollmentText: 'Already enrolled',
+  usersImages: ['https://i.ibb.co.com/TDKr13yj/avater.png', 'https://i.ibb.co.com/TDKr13yj/avater.png', 'https://i.ibb.co.com/TDKr13yj/avater.png'],
 };

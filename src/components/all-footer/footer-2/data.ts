@@ -31,7 +31,7 @@ export interface IFooter2Data {
 
 export const defaultDataFooter2: IFooter2Data = {
   brandName: 'Nexus',
-  logoUrl: 'https://i.ibb.co/pzsn8MG/english-logo.png', // Placeholder
+  logoUrl: 'https://i.ibb.co.com/2mc3j65/l.jpg', // Placeholder
   logoWidth: 50,
   tagline: 'Crafting digital experiences that inspire and innovate. We build the future, one pixel at a time.',
   quickLinks: [

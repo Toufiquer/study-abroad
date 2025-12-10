@@ -47,7 +47,7 @@ interface FooterSettings {
 const MainFooter = () => {
   const [settings, setSettings] = useState<FooterSettings>({
     brandName: 'English',
-    logoUrl: 'https://i.ibb.co/pzsn8MG/english-logo.png',
+    logoUrl: 'https://i.ibb.co.com/2mc3j65/l.jpg',
     logoWidth: 40,
     tagline: 'Empowering learners with strong English communication skills for global success. Our commitment is to excellence, growth, and confidence.',
     quickLinks: [
@@ -126,9 +126,7 @@ const MainFooter = () => {
               />
               <span className="text-xl font-semibold text-blue-700">{settings.brandName}</span>
             </Link>
-            <p className="mt-4 text-sm text-gray-600 leading-relaxed">
-              {settings.tagline}
-            </p>
+            <p className="mt-4 text-sm text-gray-600 leading-relaxed">{settings.tagline}</p>
           </div>
 
           {/* Quick Links */}
@@ -179,9 +177,11 @@ const MainFooter = () => {
 
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs md:text-sm text-gray-600">
-          <p>&copy; {new Date().getFullYear()} {settings.copyrightText}</p>
+          <p>
+            &copy; {new Date().getFullYear()} {settings.copyrightText}
+          </p>
           <p className="text-gray-500">
-            Designed with  by <span className="text-blue-600 font-semibold">{settings.designerName}</span>
+            Designed with by <span className="text-blue-600 font-semibold">{settings.designerName}</span>
           </p>
         </div>
       </motion.div>

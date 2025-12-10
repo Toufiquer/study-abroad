@@ -13,6 +13,7 @@ export interface IForm1Data {
   passportNumber: string;
   gender: string;
   submitButtonText: string;
+  currentPath?: string;
 }
 
 export const defaultDataForm1: IForm1Data = {

@@ -5,6 +5,9 @@ export interface IMenuItem {
   name: string;
   path: string;
   iconName?: string;
+  imagePath?: string;
+  isImagePublish?: boolean;
+  isIconPublish?: boolean;
   children?: IMenuItem[];
 }
 
@@ -17,6 +20,9 @@ const MenuItemSchema = new Schema<IMenuItem>({
   id: { type: Number, required: true },
   name: { type: String, required: true },
   path: { type: String, required: true },
+  imagePath: { type: String, required: true },
+  isImagePublish: { type: Boolean, default: false },
+  isIconPublish: { type: Boolean, default: false },
   iconName: { type: String },
 });
 
@@ -30,7 +36,7 @@ const MenuSchema = new Schema<IMenu>(
     type: { type: String, required: true, unique: true },
     items: [MenuItemSchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 let Menu: Model<IMenu>;

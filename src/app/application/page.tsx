@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, CheckCircle, MapPin, BookOpen, GraduationCap, User, FileText, Globe, ChevronRight, Loader2, Send, AlertCircle, Library } from 'lucide-react';
+import { Upload, CheckCircle, MapPin, BookOpen, GraduationCap, User, FileText, Globe, ChevronRight, Loader2, Send, AlertCircle } from 'lucide-react';
 
 interface CourseDetails {
   subject: string;
@@ -12,7 +11,7 @@ interface CourseDetails {
 }
 
 interface University {
-  id: string | number;
+  id: number;
   name: string;
   courses: CourseDetails[];
 }
@@ -23,53 +22,82 @@ interface City {
 }
 
 interface CountryData {
-  id: string | number;
+  id: number;
   country: string;
   cities: City[];
 }
 
-interface ApiCourse {
-  id: string;
-  name: string;
-  tutionFees: string;
-  duration: string;
-  description: string;
-  applyBtnParms: string[];
-}
-
-interface ApiUniversity {
-  id: string;
-  name: string;
-  image: string;
-  location: string;
-  description: string;
-  courses: ApiCourse[];
-}
-
-interface ApiSectionData {
-  id: string;
-  country: string;
-  city: string[];
-  universitys: ApiUniversity[];
-}
-
-interface ApiSection {
-  id: string;
-  key: string;
-  type: string;
-  data: ApiSectionData;
-}
-
-interface ApiPage {
-  pageName: string;
-  content: ApiSection[];
-}
-
-interface ApiResponse {
-  data: {
-    pages: ApiPage[];
-  };
-}
+const UNIVERSITY_DATA: CountryData[] = [
+  {
+    id: 1,
+    country: 'USA',
+    cities: [
+      {
+        name: 'New York',
+        universities: [
+          {
+            id: 101,
+            name: 'New York University',
+            courses: [
+              { subject: 'Computer Science', courseName: 'B.Sc in CS', tuitionFee: '$55,000/yr' },
+              { subject: 'Business', courseName: 'MBA Finance', tuitionFee: '$80,000/yr' },
+            ],
+          },
+          {
+            id: 102,
+            name: 'Columbia University',
+            courses: [{ subject: 'Law', courseName: 'Juris Doctor', tuitionFee: '$75,000/yr' }],
+          },
+        ],
+      },
+      {
+        name: 'Boston',
+        universities: [
+          {
+            id: 103,
+            name: 'Harvard University',
+            courses: [{ subject: 'Medicine', courseName: 'MD', tuitionFee: '$65,000/yr' }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    country: 'UK',
+    cities: [
+      {
+        name: 'London',
+        universities: [
+          {
+            id: 201,
+            name: 'Imperial College London',
+            courses: [{ subject: 'Engineering', courseName: 'M.Eng Civil', tuitionFee: '£32,000/yr' }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 3,
+    country: 'Canada',
+    cities: [
+      {
+        name: 'Toronto',
+        universities: [
+          {
+            id: 301,
+            name: 'University of Toronto',
+            courses: [
+              { subject: 'Arts', courseName: 'BA History', tuitionFee: 'CAD 45,000/yr' },
+              { subject: 'Science', courseName: 'B.Sc Biology', tuitionFee: 'CAD 50,000/yr' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
 
 interface FormDataState {
   fullName: string;
@@ -87,7 +115,6 @@ interface FormDataState {
   selectedCountry: string;
   selectedCity: string;
   selectedUniversity: string;
-  selectedSubject: string;
   selectedCourseIndex: string;
 }
 
@@ -96,12 +123,7 @@ const inputClasses =
 const labelClasses = 'block text-sm font-medium text-gray-300 mb-2 ml-1';
 const sectionTitleClasses = 'text-xl font-semibold text-white mb-6 flex items-center gap-2';
 
-function ApplicationFormContent() {
-  const searchParams = useSearchParams();
-
-  const [universityData, setUniversityData] = useState<CountryData[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-
+export default function StudentApplicationForm() {
   const [formData, setFormData] = useState<FormDataState>({
     fullName: '',
     age: '',
@@ -113,7 +135,6 @@ function ApplicationFormContent() {
     selectedCountry: '',
     selectedCity: '',
     selectedUniversity: '',
-    selectedSubject: '',
     selectedCourseIndex: '',
     passport: null,
     sscCertificate: null,
@@ -124,204 +145,44 @@ function ApplicationFormContent() {
 
   const [availableCities, setAvailableCities] = useState<City[]>([]);
   const [availableUniversities, setAvailableUniversities] = useState<University[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [availableCourses, setAvailableCourses] = useState<CourseDetails[]>([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 1. Fetch Data
   useEffect(() => {
-    const fetchUniversityData = async () => {
-      try {
-        const response = await fetch('/api/page-builder/v1');
-        const result: ApiResponse = await response.json();
-
-        const uniPage = result.data.pages.find(p => p.pageName === 'University List');
-
-        if (uniPage) {
-          const transformedData: CountryData[] = uniPage.content
-            .filter(section => section.data && section.data.country && section.data.universitys)
-            .map(section => {
-              const sData = section.data;
-
-              const cityMap = new Map<string, University[]>();
-
-              if (Array.isArray(sData.city)) {
-                sData.city.forEach(c => cityMap.set(c, []));
-              }
-
-              sData.universitys.forEach(u => {
-                const mappedCourses: CourseDetails[] = u.courses.map(c => ({
-                  subject: c.applyBtnParms && c.applyBtnParms.length >= 4 ? c.applyBtnParms[3] : 'General',
-                  courseName: c.name,
-                  tuitionFee: c.tutionFees,
-                }));
-
-                const uniObj: University = {
-                  id: u.id,
-                  name: u.name,
-                  courses: mappedCourses,
-                };
-
-                const location = u.location || (sData.city.length > 0 ? sData.city[0] : 'Unknown');
-
-                if (!cityMap.has(location)) {
-                  cityMap.set(location, []);
-                }
-                cityMap.get(location)?.push(uniObj);
-              });
-
-              const cities: City[] = Array.from(cityMap.entries())
-                .map(([name, universities]) => ({
-                  name,
-                  universities,
-                }))
-                .filter(city => city.universities.length > 0);
-
-              return {
-                id: sData.id,
-                country: sData.country,
-                cities: cities,
-              };
-            });
-
-          setUniversityData(transformedData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch university data:', error);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    fetchUniversityData();
-  }, []);
-
-  // 2. Initialize from URL (Runs once when data is ready)
-  useEffect(() => {
-    if (isLoadingData || universityData.length === 0) return;
-
-    const paramCountry = searchParams.get('country');
-    const paramCity = searchParams.get('City');
-    const paramUni = searchParams.get('University');
-    const paramSubject = searchParams.get('Subject');
-
-    if (paramCountry && !isInitialized) {
-      const countryData = universityData.find(c => c.country === paramCountry);
-
-      if (countryData) {
-        setAvailableCities(countryData.cities);
-
-        const cityData = countryData.cities.find(c => c.name === paramCity);
-        if (cityData) {
-          setAvailableUniversities(cityData.universities);
-
-          const uniData = cityData.universities.find(u => u.name === paramUni);
-          if (uniData) {
-            const subjects = Array.from(new Set(uniData.courses.map(c => c.subject)));
-            setAvailableSubjects(subjects);
-
-            if (paramSubject) {
-              const courses = uniData.courses.filter(c => c.subject === paramSubject);
-              setAvailableCourses(courses);
-            } else {
-              setAvailableCourses(uniData.courses);
-            }
-          }
-        }
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        selectedCountry: paramCountry || '',
-        selectedCity: paramCity || '',
-        selectedUniversity: paramUni || '',
-        selectedSubject: paramSubject || '',
-      }));
-
-      setIsInitialized(true);
+    if (formData.selectedCountry) {
+      const country = UNIVERSITY_DATA.find(c => c.country === formData.selectedCountry);
+      setAvailableCities(country ? country.cities : []);
+      setFormData(prev => ({ ...prev, selectedCity: '', selectedUniversity: '', selectedCourseIndex: '' }));
+    } else {
+      setAvailableCities([]);
     }
-  }, [searchParams, isInitialized, isLoadingData, universityData]);
+  }, [formData.selectedCountry]);
 
-  // --- FIXED: Removed the 4 problematic useEffects here ---
+  useEffect(() => {
+    if (formData.selectedCity) {
+      const city = availableCities.find(c => c.name === formData.selectedCity);
+      setAvailableUniversities(city ? city.universities : []);
+      setFormData(prev => ({ ...prev, selectedUniversity: '', selectedCourseIndex: '' }));
+    } else {
+      setAvailableUniversities([]);
+    }
+  }, [formData.selectedCity, availableCities]);
 
-  // --- FIXED: Updated handleInputChange to handle logic ---
+  useEffect(() => {
+    if (formData.selectedUniversity) {
+      const uni = availableUniversities.find(u => u.name === formData.selectedUniversity);
+      setAvailableCourses(uni ? uni.courses : []);
+      setFormData(prev => ({ ...prev, selectedCourseIndex: '' }));
+    } else {
+      setAvailableCourses([]);
+    }
+  }, [formData.selectedUniversity, availableUniversities]);
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-
-    if (name === 'selectedCountry') {
-      // 1. Update Country
-      const country = universityData.find(c => c.country === value);
-      setAvailableCities(country ? country.cities : []);
-
-      // Reset downstream lists
-      setAvailableUniversities([]);
-      setAvailableSubjects([]);
-      setAvailableCourses([]);
-
-      // Reset downstream form data
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        selectedCity: '',
-        selectedUniversity: '',
-        selectedSubject: '',
-        selectedCourseIndex: '',
-      }));
-    } else if (name === 'selectedCity') {
-      // 2. Update City
-      const city = availableCities.find(c => c.name === value);
-      setAvailableUniversities(city ? city.universities : []);
-
-      // Reset downstream lists
-      setAvailableSubjects([]);
-      setAvailableCourses([]);
-
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        selectedUniversity: '',
-        selectedSubject: '',
-        selectedCourseIndex: '',
-      }));
-    } else if (name === 'selectedUniversity') {
-      // 3. Update University
-      const uni = availableUniversities.find(u => u.name === value);
-      if (uni) {
-        const uniqueSubjects = Array.from(new Set(uni.courses.map(c => c.subject)));
-        setAvailableSubjects(uniqueSubjects);
-        setAvailableCourses(uni.courses); // Show all courses by default
-      } else {
-        setAvailableSubjects([]);
-        setAvailableCourses([]);
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        selectedSubject: '',
-        selectedCourseIndex: '',
-      }));
-    } else if (name === 'selectedSubject') {
-      // 4. Update Subject (Filter courses)
-      const uni = availableUniversities.find(u => u.name === formData.selectedUniversity);
-      if (uni) {
-        if (value) {
-          const filteredCourses = uni.courses.filter(c => c.subject === value);
-          setAvailableCourses(filteredCourses);
-        } else {
-          setAvailableCourses(uni.courses);
-        }
-      }
-
-      setFormData(prev => ({ ...prev, [name]: value, selectedCourseIndex: '' }));
-    } else {
-      // 5. Standard Update for other fields
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>, fieldName: keyof FormDataState) => {
@@ -571,164 +432,127 @@ function ApplicationFormContent() {
               <Globe className="w-5 h-5 text-purple-400" />
               Study Destination
             </h2>
-
-            {isLoadingData ? (
-              <div className="flex justify-center items-center py-12 text-gray-400 gap-2">
-                <Loader2 className="animate-spin" /> Loading available universities...
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClasses}>Select Country</label>
+                <div className="relative">
+                  <select
+                    name="selectedCountry"
+                    value={formData.selectedCountry}
+                    onChange={handleInputChange}
+                    className={`${inputClasses} appearance-none cursor-pointer`}
+                    required
+                  >
+                    <option value="" className="bg-gray-900">
+                      Choose a country...
+                    </option>
+                    {UNIVERSITY_DATA.map(c => (
+                      <option key={c.id} value={c.country} className="bg-gray-900">
+                        {c.country}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={labelClasses}>Select Country</label>
-                  <div className="relative">
-                    <select
-                      name="selectedCountry"
-                      value={formData.selectedCountry}
-                      onChange={handleInputChange}
-                      className={`${inputClasses} appearance-none cursor-pointer`}
-                      required
-                    >
-                      <option value="" className="bg-gray-900">
-                        Choose a country...
-                      </option>
-                      {universityData.map(c => (
-                        <option key={c.id + c.country} value={c.country} className="bg-gray-900">
-                          {c.country}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
-                  </div>
-                </div>
 
-                <div>
-                  <label className={labelClasses}>Select City</label>
-                  <div className="relative">
-                    <select
-                      name="selectedCity"
-                      value={formData.selectedCity}
-                      onChange={handleInputChange}
-                      className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50`}
-                      disabled={!formData.selectedCountry}
-                      required
-                    >
-                      <option value="" className="bg-gray-900">
-                        {formData.selectedCountry ? 'Choose a city...' : 'Select Country First'}
+              <div>
+                <label className={labelClasses}>Select City</label>
+                <div className="relative">
+                  <select
+                    name="selectedCity"
+                    value={formData.selectedCity}
+                    onChange={handleInputChange}
+                    className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50`}
+                    disabled={!formData.selectedCountry}
+                    required
+                  >
+                    <option value="" className="bg-gray-900">
+                      {formData.selectedCountry ? 'Choose a city...' : 'Select Country First'}
+                    </option>
+                    {availableCities.map((city, idx) => (
+                      <option key={idx} value={city.name} className="bg-gray-900">
+                        {city.name}
                       </option>
-                      {availableCities.map((city, idx) => (
-                        <option key={idx} value={city.name} className="bg-gray-900">
-                          {city.name}
-                        </option>
-                      ))}
-                    </select>
-                    <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
+                    ))}
+                  </select>
+                  <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
-
-                <div>
-                  <label className={labelClasses}>Select University</label>
-                  <div className="relative">
-                    <select
-                      name="selectedUniversity"
-                      value={formData.selectedUniversity}
-                      onChange={handleInputChange}
-                      className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50`}
-                      disabled={!formData.selectedCity}
-                      required
-                    >
-                      <option value="" className="bg-gray-900">
-                        {formData.selectedCity ? 'Choose a university...' : 'Select City First'}
-                      </option>
-                      {availableUniversities.map(uni => (
-                        <option key={uni.id} value={uni.name} className="bg-gray-900">
-                          {uni.name}
-                        </option>
-                      ))}
-                    </select>
-                    <GraduationCap className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClasses}>Select Subject</label>
-                  <div className="relative">
-                    <select
-                      name="selectedSubject"
-                      value={formData.selectedSubject}
-                      onChange={handleInputChange}
-                      className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50`}
-                      disabled={!formData.selectedUniversity}
-                      required
-                    >
-                      <option value="" className="bg-gray-900">
-                        {formData.selectedUniversity ? 'Filter by Subject (Optional)' : 'Select University First'}
-                      </option>
-                      {availableSubjects.map((subject, idx) => (
-                        <option key={idx} value={subject} className="bg-gray-900">
-                          {subject}
-                        </option>
-                      ))}
-                    </select>
-                    <Library className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {formData.selectedUniversity && (
-                  <div className="md:col-span-2 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <label className={labelClasses}>Select Program</label>
-                    {availableCourses.length > 0 ? (
-                      <div className="grid gap-4">
-                        {availableCourses.map((course, idx) => (
-                          <label
-                            key={idx}
-                            className={`
-                              relative flex items-center p-4 rounded-xl border cursor-pointer transition-all duration-300
-                              ${
-                                formData.selectedCourseIndex === idx.toString()
-                                  ? 'bg-purple-500/10 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.15)]'
-                                  : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                              }
-                            `}
-                          >
-                            <input
-                              type="radio"
-                              name="selectedCourseIndex"
-                              value={idx}
-                              checked={formData.selectedCourseIndex === idx.toString()}
-                              onChange={handleInputChange}
-                              className="sr-only"
-                              required
-                            />
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start mb-1">
-                                <h3 className="font-semibold text-white">{course.courseName}</h3>
-                                <span className="text-sm font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">{course.subject}</span>
-                              </div>
-                              <p className="text-sm text-gray-400 flex items-center gap-1.5">
-                                <BookOpen size={14} />
-                                Tuition: <span className="text-gray-200">{course.tuitionFee}</span>
-                              </p>
-                            </div>
-                            <div
-                              className={`
-                              w-5 h-5 rounded-full border-2 ml-4 flex items-center justify-center
-                              ${formData.selectedCourseIndex === idx.toString() ? 'border-purple-500' : 'border-gray-500'}
-                            `}
-                            >
-                              {formData.selectedCourseIndex === idx.toString() && <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />}
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-center text-sm">
-                        No courses found for the selected subject.
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
-            )}
+
+              <div className="md:col-span-2">
+                <label className={labelClasses}>Select University</label>
+                <div className="relative">
+                  <select
+                    name="selectedUniversity"
+                    value={formData.selectedUniversity}
+                    onChange={handleInputChange}
+                    className={`${inputClasses} appearance-none cursor-pointer disabled:opacity-50`}
+                    disabled={!formData.selectedCity}
+                    required
+                  >
+                    <option value="" className="bg-gray-900">
+                      {formData.selectedCity ? 'Choose a university...' : 'Select City First'}
+                    </option>
+                    {availableUniversities.map(uni => (
+                      <option key={uni.id} value={uni.name} className="bg-gray-900">
+                        {uni.name}
+                      </option>
+                    ))}
+                  </select>
+                  <GraduationCap className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {formData.selectedUniversity && (
+                <div className="md:col-span-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <label className={labelClasses}>Select Program</label>
+                  <div className="grid gap-4">
+                    {availableCourses.map((course, idx) => (
+                      <label
+                        key={idx}
+                        className={`
+                          relative flex items-center p-4 rounded-xl border cursor-pointer transition-all duration-300
+                          ${
+                            formData.selectedCourseIndex === idx.toString()
+                              ? 'bg-purple-500/10 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.15)]'
+                              : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                          }
+                        `}
+                      >
+                        <input
+                          type="radio"
+                          name="selectedCourseIndex"
+                          value={idx}
+                          checked={formData.selectedCourseIndex === idx.toString()}
+                          onChange={handleInputChange}
+                          className="sr-only"
+                          required
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="font-semibold text-white">{course.courseName}</h3>
+                            <span className="text-sm font-mono text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">{course.subject}</span>
+                          </div>
+                          <p className="text-sm text-gray-400 flex items-center gap-1.5">
+                            <BookOpen size={14} />
+                            Tuition: <span className="text-gray-200">{course.tuitionFee}</span>
+                          </p>
+                        </div>
+                        <div
+                          className={`
+                          w-5 h-5 rounded-full border-2 ml-4 flex items-center justify-center
+                          ${formData.selectedCourseIndex === idx.toString() ? 'border-purple-500' : 'border-gray-500'}
+                        `}
+                        >
+                          {formData.selectedCourseIndex === idx.toString() && <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </motion.div>
 
           {status === 'error' && (
@@ -770,13 +594,5 @@ function ApplicationFormContent() {
         </form>
       </div>
     </div>
-  );
-}
-
-export default function StudentApplicationForm() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading Form...</div>}>
-      <ApplicationFormContent />
-    </Suspense>
   );
 }

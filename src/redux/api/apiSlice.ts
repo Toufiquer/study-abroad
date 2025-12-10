@@ -32,6 +32,9 @@ export const apiSlice = createApi({
     'tagTypeSidebars',
     'tagTypeProfile',
     'tagTypePageBuilder',
+    'tagTypeFormActions',
+    'Footer',
+    'tagTypeFormSubmission',
   ],
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({

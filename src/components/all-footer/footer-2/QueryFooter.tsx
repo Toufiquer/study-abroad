@@ -1,23 +1,77 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
 import { BiLogoFacebookCircle, BiLogoLinkedin, BiLogoInstagram, BiLogoYoutube, BiWorld } from 'react-icons/bi';
 import { BsTwitterX, BsGithub } from 'react-icons/bs';
 import { Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
-import { defaultDataFooter2 } from './data';
+
+// --- Types ---
+interface ISocialLink {
+  id: number;
+  platform: string;
+  link: string;
+}
+
+interface IQuickLink {
+  id: number;
+  title: string;
+  link: string;
+}
+
+interface IContactInfo {
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface IFooter2Data {
+  logoUrl?: string;
+  logoWidth?: number;
+  brandName: string;
+  tagline: string;
+  copyrightText: string;
+  designerName?: string;
+  socialLinks: ISocialLink[];
+  quickLinks: IQuickLink[];
+  contactInfo: IContactInfo;
+}
+
+const defaultDataFooter2: IFooter2Data = {
+  brandName: 'NEXUS',
+  tagline: 'Innovating the future, one pixel at a time.',
+  copyrightText: 'Nexus Inc',
+  designerName: 'AppGenerator',
+  logoUrl: 'https://placehold.co/100x100/4f46e5/white?text=N',
+  logoWidth: 60,
+  quickLinks: [
+    { id: 1, title: 'About Us', link: '#' },
+    { id: 2, title: 'Services', link: '#' },
+    { id: 3, title: 'Blog', link: '#' },
+    { id: 4, title: 'Contact', link: '#' },
+  ],
+  socialLinks: [
+    { id: 1, platform: 'facebook', link: '#' },
+    { id: 2, platform: 'twitter', link: '#' },
+    { id: 3, platform: 'instagram', link: '#' },
+  ],
+  contactInfo: {
+    address: '123 Tech Avenue, Silicon Valley, CA',
+    phone: '+1 (555) 123-4567',
+    email: 'contact@nexus.dev',
+  },
+};
 
 interface QueryFooterProps {
   data?: string;
 }
 
-const QueryFooter = ({ data }: QueryFooterProps) => {
-  // 1. Logic: If props found then use it, if not found then use default data.
-
+const QueryFooter2 = ({ data }: QueryFooterProps) => {
+  // 1. Logic: Parse data or use default
   const parseInitData = data ? JSON.parse(data) : null;
-  const settings = parseInitData || defaultDataFooter2;
+  const [settings] = useState<IFooter2Data>(parseInitData || defaultDataFooter2);
 
   const getSocialIcon = (platform: string) => {
     const p = platform.toLowerCase();
@@ -52,7 +106,7 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
   };
 
   return (
-    <footer className="relative pt-20 pb-10 overflow-hidden bg-slate-950">
+    <footer className="relative pt-20 pb-10 overflow-hidden bg-slate-950 font-sans border-t border-white/5">
       {/* BACKGROUND BLUR & GLOW EFFECTS */}
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-2xl z-0" />
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none z-0 mix-blend-screen" />
@@ -70,9 +124,17 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
           {/* Brand Column */}
           <motion.div variants={itemVariants} className="lg:col-span-5 space-y-8">
             <Link href="/" className="inline-flex items-center gap-3 group">
+              {/* UPDATED: Image Rendering Logic */}
               {settings.logoUrl && (
                 <div className="relative p-2 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm group-hover:border-indigo-500/50 transition-all duration-300">
-                  <Image src={settings.logoUrl} alt={settings.brandName} width={settings.logoWidth} height={settings.logoWidth} className="object-contain" />
+                  <Image
+                    src={settings.logoUrl}
+                    alt={settings.brandName}
+                    width={settings.logoWidth || 50}
+                    height={50}
+                    className="object-contain w-auto h-auto max-h-[50px]"
+                    unoptimized // Crucial for handling external/uploaded URLs
+                  />
                 </div>
               )}
               <span className="text-3xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent tracking-tight">
@@ -83,8 +145,7 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
             <p className="text-slate-400 leading-relaxed max-w-md text-base font-light border-l-2 border-indigo-500/30 pl-4">{settings.tagline}</p>
 
             <div className="flex flex-wrap gap-3">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {settings.socialLinks.map((social: any) => (
+              {settings.socialLinks.map(social => (
                 <Link
                   key={social.id}
                   href={social.link}
@@ -104,7 +165,7 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
               Explore
             </h3>
             <ul className="space-y-4">
-              {settings.quickLinks.map((link: { id: number | string; link: string; title: string }) => (
+              {settings.quickLinks.map(link => (
                 <li key={link.id}>
                   <Link href={link.link} className="group flex items-center gap-3 text-slate-400 hover:text-white transition-colors">
                     <ArrowRight size={14} className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 text-indigo-400 transition-all duration-300" />
@@ -122,45 +183,51 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
               Get in Touch
             </h3>
             <ul className="space-y-6">
-              <li className="flex items-start gap-4 group">
-                <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                  <MapPin size={20} />
-                </div>
-                <div>
-                  <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
-                    Address
-                  </span>
-                  <span className="text-slate-300 font-light leading-snug">{settings.contactInfo.address}</span>
-                </div>
-              </li>
+              {settings.contactInfo.address && (
+                <li className="flex items-start gap-4 group">
+                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
+                      Address
+                    </span>
+                    <span className="text-slate-300 font-light leading-snug">{settings.contactInfo.address}</span>
+                  </div>
+                </li>
+              )}
 
-              <li className="flex items-center gap-4 group">
-                <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                  <Phone size={20} />
-                </div>
-                <div>
-                  <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
-                    Phone
-                  </span>
-                  <a href={`tel:${settings.contactInfo.phone}`} className="text-slate-300 hover:text-white transition-colors font-mono">
-                    {settings.contactInfo.phone}
-                  </a>
-                </div>
-              </li>
+              {settings.contactInfo.phone && (
+                <li className="flex items-center gap-4 group">
+                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                    <Phone size={20} />
+                  </div>
+                  <div>
+                    <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
+                      Phone
+                    </span>
+                    <a href={`tel:${settings.contactInfo.phone}`} className="text-slate-300 hover:text-white transition-colors font-mono">
+                      {settings.contactInfo.phone}
+                    </a>
+                  </div>
+                </li>
+              )}
 
-              <li className="flex items-center gap-4 group">
-                <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
-                    Email
-                  </span>
-                  <a href={`mailto:${settings.contactInfo.email}`} className="text-slate-300 hover:text-white transition-colors">
-                    {settings.contactInfo.email}
-                  </a>
-                </div>
-              </li>
+              {settings.contactInfo.email && (
+                <li className="flex items-center gap-4 group">
+                  <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1 group-hover:text-indigo-300 transition-colors">
+                      Email
+                    </span>
+                    <a href={`mailto:${settings.contactInfo.email}`} className="text-slate-300 hover:text-white transition-colors">
+                      {settings.contactInfo.email}
+                    </a>
+                  </div>
+                </li>
+              )}
             </ul>
           </motion.div>
         </div>
@@ -174,15 +241,15 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
             &copy; {new Date().getFullYear()} <span className="text-slate-300 font-medium">{settings.copyrightText}</span>
           </p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-indigo-400 transition-colors">
+            <Link href="#" className="hover:text-indigo-400 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-indigo-400 transition-colors">
+            <Link href="#" className="hover:text-indigo-400 transition-colors">
               Terms of Service
             </Link>
             <div className="hidden md:block w-px h-4 bg-white/10"></div>
             <p className="flex items-center gap-1">
-              Designed by <span className="text-indigo-400 font-medium">{settings.designerName}</span>
+              Designed by <span className="text-indigo-400 font-medium">{settings.designerName || 'AppGenerator'}</span>
             </p>
           </div>
         </motion.div>
@@ -191,4 +258,4 @@ const QueryFooter = ({ data }: QueryFooterProps) => {
   );
 };
 
-export default QueryFooter;
+export default QueryFooter2;

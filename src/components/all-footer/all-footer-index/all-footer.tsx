@@ -1,4 +1,4 @@
-// all-section-index.tsx
+// all-footer-index.tsx
 import { defaultDataFooter1, IFooter1Data } from '../footer-1/data';
 import { defaultDataFooter2, IFooter2Data } from '../footer-2/data';
 

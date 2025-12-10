@@ -10,6 +10,7 @@ export interface IStory {
 export interface ISection11Data {
   id: string;
   stories: IStory[];
+  storiesPerPage: number;
 }
 
 export interface Section11Props {
@@ -18,6 +19,7 @@ export interface Section11Props {
 
 export const defaultDataSection11: ISection11Data = {
   id: 'section-11-stories-reel',
+  storiesPerPage: 1,
   stories: [
     {
       id: 'story-001',

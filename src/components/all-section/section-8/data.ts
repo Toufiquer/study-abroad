@@ -13,7 +13,14 @@ export interface ISection8Data {
       tutionFees: string;
       duration: string;
       description: string;
+      degreeLevelInfo: {
+        id: string;
+        degreeLevel: string;
+        tutionFees: string;
+        duration: string;
+      }[];
       applyBtnParms: string[]; // [country, city, university, subject]
+      applyBtnParmsDegreeLevel: string[]; // [param1, param2, ...]
     }[];
     description: string;
   }[];
@@ -41,7 +48,22 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 54,000 / year',
           duration: '2 Years',
           description: 'Advanced business skills and leadership training.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-SYD-01-M',
+              degreeLevel: 'Master',
+              tutionFees: 'AUD 54,000 / year',
+              duration: '2 Years',
+            },
+            {
+              id: 'DL-SYD-01-GD',
+              degreeLevel: 'Graduate Diploma',
+              tutionFees: 'AUD 40,000 / year',
+              duration: '1 Year',
+            },
+          ],
           applyBtnParms: ['Australia', 'Sydney', 'University of Sydney', 'Master of Commerce'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'Commerce'],
         },
         {
           id: 'CRS-SYD-02',
@@ -49,7 +71,16 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 48,000 / year',
           duration: '3 Years',
           description: 'Design environments for the future.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-SYD-02-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 48,000 / year',
+              duration: '3 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Sydney', 'University of Sydney', 'Bachelor of Architecture'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'Architecture'],
         },
         {
           id: 'CRS-SYD-03',
@@ -57,7 +88,22 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 62,000 / year',
           duration: '5 Years',
           description: 'Comprehensive training in animal health.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-SYD-03-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 62,000 / year',
+              duration: '5 Years',
+            },
+            {
+              id: 'DL-SYD-03-D',
+              degreeLevel: 'Doctorate',
+              tutionFees: 'AUD 68,000 / year',
+              duration: '4 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Sydney', 'University of Sydney', 'Veterinary Medicine'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'VetMed'],
         },
       ],
     },
@@ -74,7 +120,16 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 50,000 / year',
           duration: '3 Years',
           description: 'Understand the human body and disease.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-MEL-01-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 50,000 / year',
+              duration: '3 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Melbourne', 'University of Melbourne', 'Biomedicine'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'Biomedicine'],
         },
         {
           id: 'CRS-MEL-02',
@@ -82,7 +137,16 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 46,000 / year',
           duration: '3 Years',
           description: 'Graduate law degree for aspiring lawyers.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-MEL-02-JD',
+              degreeLevel: 'Juris Doctor',
+              tutionFees: 'AUD 46,000 / year',
+              duration: '3 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Melbourne', 'University of Melbourne', 'Juris Doctor'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'Law'],
         },
         {
           id: 'CRS-MEL-03',
@@ -90,7 +154,22 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 38,000 / year',
           duration: '3 Years',
           description: 'Visual art, acting, and music performance.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-MEL-03-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 38,000 / year',
+              duration: '3 Years',
+            },
+            {
+              id: 'DL-MEL-03-M',
+              degreeLevel: 'Master',
+              tutionFees: 'AUD 42,000 / year',
+              duration: '2 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Melbourne', 'University of Melbourne', 'Fine Arts'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'Arts'],
         },
       ],
     },
@@ -107,7 +186,16 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 45,000 / year',
           duration: '3 Years',
           description: 'Study of marine organisms and ecosystems nearby the Great Barrier Reef.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-QLD-01-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 45,000 / year',
+              duration: '3 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Brisbane', 'University of Queensland', 'Marine Biology'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'MarineBio'],
         },
         {
           id: 'CRS-QLD-02',
@@ -115,7 +203,22 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 42,000 / year',
           duration: '3 Years',
           description: 'Software engineering and systems design.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-QLD-02-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 42,000 / year',
+              duration: '3 Years',
+            },
+            {
+              id: 'DL-QLD-02-M',
+              degreeLevel: 'Master',
+              tutionFees: 'AUD 48,000 / year',
+              duration: '2 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Brisbane', 'University of Queensland', 'Information Technology'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'IT'],
         },
         {
           id: 'CRS-QLD-03',
@@ -123,7 +226,16 @@ export const defaultDataSection8: ISection8Data = {
           tutionFees: 'AUD 44,000 / year',
           duration: '3 Years',
           description: 'Solutions to environmental issues.',
+          degreeLevelInfo: [
+            {
+              id: 'DL-QLD-03-B',
+              degreeLevel: 'Bachelor',
+              tutionFees: 'AUD 44,000 / year',
+              duration: '3 Years',
+            },
+          ],
           applyBtnParms: ['Australia', 'Brisbane', 'University of Queensland', 'Environmental Science'],
+          applyBtnParmsDegreeLevel: ['Degree', 'Level', 'EnvSci'],
         },
       ],
     },

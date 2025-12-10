@@ -13,6 +13,7 @@ export interface ICollabOption {
 export interface ISection13Data {
   id: string;
   title: string;
+  badge: string;
   subTitle: string;
   description: string;
   partners: IPartner[];
@@ -25,6 +26,7 @@ export interface Section13Props {
 
 export const defaultDataSection13: ISection13Data = {
   id: 'section-13-collaboration',
+  badge: 'Partnership Network',
   title: 'Building',
   subTitle: 'Together',
   description: 'We believe in the power of partnership. From startups to enterprises, we collaborate to create digital excellence.',

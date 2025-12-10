@@ -1,47 +1,58 @@
-import { apiSlice } from '@/redux/api/apiSlice';
+// lib/features/footerSlice.ts
+import { apiSlice } from '@/redux/api/apiSlice'; // Ensure this path matches your project structure
+
+export interface DisabledPath {
+  path: string;
+  isExcluded: boolean;
+}
+
+export interface FooterItem {
+  _id: string;
+  name: string;
+  disabledPaths: DisabledPath[];
+  isEnabled: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+  createdAt?: string;
+}
 
 export const footerApi = apiSlice.injectEndpoints({
   endpoints: builder => ({
-    // 1. CREATE: Add new footer settings
-    createFooterSettings: builder.mutation({
-      query: data => ({
-        url: '/api/footer-settings',
+    getFooters: builder.query<FooterItem[], void>({
+      query: () => '/api/footer-settings/v1',
+      providesTags: result =>
+        result ? [...result.map(({ _id }) => ({ type: 'Footer' as const, id: _id })), { type: 'Footer', id: 'LIST' }] : [{ type: 'Footer', id: 'LIST' }],
+    }),
+    addFooter: builder.mutation<FooterItem, Partial<FooterItem>>({
+      query: newFooter => ({
+        url: '/api/footer-settings/v1',
         method: 'POST',
-        body: data,
+        body: newFooter,
       }),
-      invalidatesTags: ['FooterSettings'],
+      invalidatesTags: [{ type: 'Footer', id: 'LIST' }],
     }),
-
-    // 2. READ: Get footer settings
-    getFooterSettings: builder.query({
-      query: () => ({
-        url: '/api/footer-settings',
-        method: 'GET',
-      }),
-      providesTags: ['FooterSettings'],
-    }),
-
-    // 3. UPDATE: Update existing settings (using PATCH for partial update)
-    // Arguments expected: { id: string, data: object }
-    updateFooterSettings: builder.mutation({
-      query: data => ({
-        url: `/api/footer-settings`, // Assuming the API expects ID in URL
+    updateFooter: builder.mutation<FooterItem, Partial<FooterItem>>({
+      query: ({ _id, ...data }) => ({
+        url: '/api/footer-settings/v1',
         method: 'PUT',
-        body: data,
+        body: { _id, ...data },
       }),
-      invalidatesTags: ['FooterSettings'],
+      invalidatesTags: (result, error, arg) => [
+        { type: 'Footer', id: arg._id },
+        { type: 'Footer', id: 'LIST' },
+      ],
     }),
-
-    // 4. DELETE: Remove footer settings
-    deleteFooterSettings: builder.mutation({
+    deleteFooter: builder.mutation<{ success: boolean; id: string }, string>({
       query: id => ({
-        url: `/api/footer-settings`,
+        url: `/api/footer-settings/v1?id=${id}`,
         method: 'DELETE',
-        body: { id: id },
       }),
-      invalidatesTags: ['FooterSettings'],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Footer', id },
+        { type: 'Footer', id: 'LIST' },
+      ],
     }),
   }),
 });
 
-export const { useCreateFooterSettingsMutation, useGetFooterSettingsQuery, useUpdateFooterSettingsMutation, useDeleteFooterSettingsMutation } = footerApi;
+export const { useGetFootersQuery, useAddFooterMutation, useUpdateFooterMutation, useDeleteFooterMutation } = footerApi;

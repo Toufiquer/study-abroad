@@ -57,9 +57,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
             <LayoutTemplate className="text-blue-400" size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              Edit Section 3
-            </h2>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Edit Section 3</h2>
             <p className="text-zinc-400 text-sm">Update the content and design of this section.</p>
           </div>
         </div>
@@ -162,10 +160,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {formData.highlights.map((highlight, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-blue-200"
-                    >
+                    <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-blue-200">
                       <Sparkles className="w-3 h-3 text-blue-400" />
                       {highlight}
                       <button onClick={() => removeHighlight(idx)} className="ml-1 hover:text-red-400 transition-colors">
@@ -191,11 +186,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-400">Student Count</Label>
-                  <Input
-                    value={formData.studentCount}
-                    onChange={e => updateField('studentCount', e.target.value)}
-                    className="bg-zinc-950/50 border-zinc-800"
-                  />
+                  <Input value={formData.studentCount} onChange={e => updateField('studentCount', e.target.value)} className="bg-zinc-950/50 border-zinc-800" />
                 </div>
               </div>
             </div>
@@ -204,11 +195,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-zinc-500 text-xs">Primary Button</Label>
-                  <Input
-                    value={formData.buttonPrimary}
-                    onChange={e => updateField('buttonPrimary', e.target.value)}
-                    className="bg-zinc-900 border-zinc-800"
-                  />
+                  <Input value={formData.buttonPrimary} onChange={e => updateField('buttonPrimary', e.target.value)} className="bg-zinc-900 border-zinc-800" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-500 text-xs">Secondary Button</Label>
@@ -230,11 +217,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-500 text-xs">CTA Text</Label>
-                  <Input
-                    value={formData.ctaText}
-                    onChange={e => updateField('ctaText', e.target.value)}
-                    className="bg-zinc-900 border-zinc-800"
-                  />
+                  <Input value={formData.ctaText} onChange={e => updateField('ctaText', e.target.value)} className="bg-zinc-900 border-zinc-800" />
                 </div>
               </div>
             </div>
@@ -243,10 +226,7 @@ const MutationSection3 = ({ data, onSubmit }: SectionFormProps) => {
 
         {/* Footer */}
         <div className="p-6 border-t border-zinc-800 bg-zinc-900/80 backdrop-blur flex justify-end">
-          <Button
-            onClick={handleSave}
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white px-8 py-6 rounded-xl shadow-lg shadow-blue-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
+          <Button onClick={handleSave} variant="outlineGlassy" size="sm">
             <Save className="w-5 h-5 mr-2" />
             Save Changes
           </Button>

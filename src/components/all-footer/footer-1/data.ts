@@ -31,7 +31,7 @@ export interface IFooter1Data {
 
 export const defaultDataFooter1: IFooter1Data = {
   brandName: 'English',
-  logoUrl: 'https://i.ibb.co/pzsn8MG/english-logo.png',
+  logoUrl: 'https://i.ibb.co.com/2mc3j65/l.jpg',
   logoWidth: 40,
   tagline: 'Empowering learners with strong English communication skills for global success. Our commitment is to excellence, growth, and confidence.',
   quickLinks: [

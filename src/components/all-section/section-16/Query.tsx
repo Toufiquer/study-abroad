@@ -1,193 +1,280 @@
-// Query.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
-import { Activity, Users, Shield, Terminal, Search, Bell, LayoutGrid, Cpu, GitCommit, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { defaultDataSection16, ModerationItem } from './data';
-import { ModerationAction, MutationSection16 } from './Mutation';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const SidebarItem = ({ icon: Icon, label, active }: { icon: any; label: string; active?: boolean }) => (
-  <div
-    className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 group ${active ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'hover:bg-white/5 text-zinc-500 hover:text-zinc-300'}`}
-  >
-    <Icon className={`w-5 h-5 ${active ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
-    <span className="font-medium text-sm tracking-wide">{label}</span>
-  </div>
-);
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, ShieldAlert, MoreHorizontal, X, Check, User, Activity } from 'lucide-react';
+import { DashboardMetric, ModerationItem, defaultDataSection16 } from './data';
+import { cn } from '@/lib/utils';
 
-const StatCard = ({ metric }: { metric: (typeof defaultDataSection16.metrics)[0] }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-[#0a0a0a] border border-white/5 p-6 rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-colors"
-  >
-    <div
-      className={`absolute top-0 right-0 p-8 rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${metric.status === 'warning' ? 'bg-red-500' : 'bg-purple-500'}`}
-    />
+// Update interface to include new header fields
+interface ISection16Data {
+  id?: string;
+  badge?: string;
+  title?: string;
+  subTitle?: string;
+  metrics: DashboardMetric[];
+  moderationQueue: ModerationItem[];
+}
 
-    <div className="flex justify-between items-start mb-4 relative z-10">
-      <div className="p-2 bg-zinc-900 rounded-lg border border-zinc-800 text-zinc-400">
-        <Activity className="w-5 h-5" />
-      </div>
-      <span
-        className={`text-xs font-bold px-2 py-1 rounded-full border ${metric.status === 'warning' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`}
-      >
-        {metric.status.toUpperCase()}
-      </span>
-    </div>
+interface Section16Props {
+  data?: ISection16Data | string;
+}
 
-    <div className="relative z-10">
-      <h4 className="text-zinc-500 text-xs uppercase tracking-widest font-semibold mb-1">{metric.label}</h4>
-      <div className="flex items-end gap-3">
-        <span className="text-2xl md:text-3xl font-bold text-white tracking-tight">{metric.value}</span>
-        <span className={`flex items-center text-xs font-bold mb-1.5 ${metric.trend > 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {metric.trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-          {Math.abs(metric.trend)}%
-        </span>
-      </div>
-    </div>
+const QuerySection16: React.FC<Section16Props> = ({ data }) => {
+  const [queue, setQueue] = useState<ModerationItem[]>([]);
 
-    {/* Decorative Graph Line */}
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.random() * 60 + 40}%` }}
-        transition={{ duration: 1.5, ease: 'easeOut' }}
-        className={`h-full ${metric.status === 'warning' ? 'bg-red-500' : 'bg-purple-500'}`}
-      />
-    </div>
-  </motion.div>
-);
+  // Parse data
+  const sectionData: ISection16Data = useMemo(() => {
+    let parsed = defaultDataSection16;
+    if (data) {
+      try {
+        parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      } catch (e) {
+        console.error('Failed to parse section data', e);
+      }
+    }
+    // Update local state for queue when data changes
+    if (parsed.moderationQueue) {
+      setQueue(parsed.moderationQueue);
+    }
+    return parsed;
+  }, [data]);
 
-export default function AdminQuery() {
-  const [moderationQueue, setModerationQueue] = useState<ModerationItem[]>(defaultDataSection16.moderationQueue);
-
-  const handleResolve = (id: string) => {
-    setModerationQueue(prev => prev.filter(item => item.id !== id));
+  const handleModerationAction = (id: string) => {
+    setQueue(prev => prev.filter(item => item.id !== id));
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 flex overflow-hidden font-sans selection:bg-purple-500/30">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-[#050505] hidden md:flex flex-col p-6 z-20">
-        <div className="flex items-center gap-2 mb-10 px-2">
-          <div className="w-8 h-8 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/20">
-            <Cpu className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">
-            NEXUS<span className="text-purple-500">ADMIN</span>
-          </span>
-        </div>
+    <section className="relative w-full py-16 md:py-24 bg-zinc-950 overflow-hidden font-mono text-zinc-100 selection:bg-emerald-500/30 selection:text-emerald-200">
+      {/* --- Sci-Fi Background --- */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Grid Lines */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-zinc-950 via-transparent to-zinc-950" />
 
-        <nav className="space-y-2 flex-1">
-          <div className="text-xs font-semibold text-zinc-600 uppercase tracking-widest px-4 mb-2">Main</div>
-          <SidebarItem icon={LayoutGrid} label="Dashboard" active />
-          <SidebarItem icon={Users} label="User Grid" />
-          <SidebarItem icon={Shield} label="Protocol Security" />
+        {/* Glows */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[100px] animate-pulse delay-700" />
+      </div>
 
-          <div className="text-xs font-semibold text-zinc-600 uppercase tracking-widest px-4 mb-2 mt-8">System</div>
-          <SidebarItem icon={Terminal} label="Console" />
-          <SidebarItem icon={GitCommit} label="Node Graph" />
-          <SidebarItem icon={Activity} label="Health Status" />
-        </nav>
-
-        <div className="mt-auto px-4 py-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <div className="flex-1">
-              <p className="text-xs text-zinc-400">System Status</p>
-              <p className="text-xs font-bold text-green-400">OPTIMAL</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 h-screen overflow-y-auto relative bg-grid-white/[0.02]">
-        <div className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">Command Center</h1>
-
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <Search className="w-5 h-5 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-            </div>
-            <div className="relative group cursor-pointer">
-              <Bell className="w-5 h-5 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full" />
-            </div>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-900 border border-zinc-700" />
-          </div>
-        </div>
-
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {defaultDataSection16.metrics.map(metric => (
-              <StatCard key={metric.id} metric={metric} />
-            ))}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 space-y-12">
+        {/* --- Header Section --- */}
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8 border-b border-white/5 pb-8">
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest"
+            >
+              <Activity size={12} />
+              <span>{sectionData.badge || 'System Monitor'}</span>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl md:text-5xl font-black text-white tracking-tight"
+            >
+              {sectionData.title}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-lg text-zinc-400 mt-2 font-sans"
+            >
+              {sectionData.subTitle}
+            </motion.p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Moderation Column */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-purple-500" />
-                  Moderation Queue
-                  <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400 border border-zinc-700">{moderationQueue.length} Pending</span>
-                </h3>
-              </div>
-
-              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 min-h-[400px]">
-                <LayoutGroup>
-                  <AnimatePresence mode="popLayout">
-                    {moderationQueue.length === 0 ? (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-zinc-500">
-                        <Shield className="w-12 h-12 mb-4 opacity-20" />
-                        <p>All sectors clear.</p>
-                      </motion.div>
-                    ) : (
-                      moderationQueue.map(item => (
-                        <motion.div key={item.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}>
-                          <ModerationAction item={item} onResolve={handleResolve} />
-                        </motion.div>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </LayoutGroup>
-              </div>
-            </div>
-
-            {/* Right Column: Logs & Tools */}
-            <div className="space-y-6">
-              <MutationSection16 />
-
-              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-                  <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                    <Terminal className="w-4 h-4" />
-                    System Logs
-                  </h3>
-                </div>
-                <div className="p-4 space-y-2 font-mono text-xs">
-                  {defaultDataSection16.logs.map(log => (
-                    <div key={log.id} className="flex gap-3 text-zinc-500 hover:bg-white/5 p-2 rounded transition-colors cursor-default">
-                      <span className="text-zinc-600 select-none">[{log.time}]</span>
-                      <span className={log.type === 'error' ? 'text-red-400' : log.type === 'success' ? 'text-green-400' : 'text-blue-400'}>{log.event}</span>
-                    </div>
-                  ))}
-                  <motion.div
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                    className="w-2 h-4 bg-purple-500 ml-2 inline-block align-middle"
-                  />
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            System Operational
           </div>
         </div>
-      </main>
-    </div>
+
+        {/* --- 1. Metrics Grid --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {sectionData.metrics?.map((metric, i) => (
+            <MetricCard key={metric.id} metric={metric} index={i} />
+          ))}
+        </div>
+
+        {/* --- 2. Moderation Queue --- */}
+        <div className="space-y-6 pt-8">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-zinc-200">
+              <ShieldAlert className="text-rose-500" size={20} />
+              Moderation Queue
+              <span className="bg-zinc-800 text-zinc-300 text-xs px-2 py-0.5 rounded-full ml-2 border border-white/5">{queue.length}</span>
+            </h3>
+            <div className="text-xs text-zinc-500 font-mono flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500/50" />
+              Real-time Feed
+            </div>
+          </div>
+
+          <div className="space-y-3 min-h-[300px]">
+            <AnimatePresence mode="popLayout">
+              {queue.length > 0 ? (
+                queue.map(item => <ModerationRow key={item.id} item={item} onAction={handleModerationAction} />)
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="h-64 flex flex-col items-center justify-center p-12 border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20 text-zinc-500"
+                >
+                  <CheckCircle className="w-12 h-12 mb-4 text-emerald-500/50" />
+                  <p>All caught up. No pending items.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </section>
   );
-}
+};
+
+// --- Sub-Components ---
+
+const MetricCard = ({ metric, index }: { metric: DashboardMetric; index: number }) => {
+  const isStable = metric.status === 'stable';
+  const isCritical = metric.status === 'critical';
+  const TrendIcon = metric.trend > 0 ? TrendingUp : metric.trend < 0 ? TrendingDown : Minus;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className={cn(
+        'p-6 rounded-2xl border bg-zinc-900/40 backdrop-blur-sm relative overflow-hidden group hover:bg-zinc-900/60 transition-all duration-300',
+        isStable ? 'border-zinc-800 hover:border-emerald-500/30' : isCritical ? 'border-rose-500/30 bg-rose-950/5' : 'border-amber-500/30 bg-amber-950/5',
+      )}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest group-hover:text-zinc-300 transition-colors">{metric.label}</span>
+        {metric.status !== 'stable' && <AlertTriangle size={14} className={isCritical ? 'text-rose-500' : 'text-amber-500'} />}
+      </div>
+
+      <div className="text-3xl font-black text-white mb-3 tracking-tight font-sans">{metric.value}</div>
+
+      <div className="flex items-center gap-3">
+        <span
+          className={cn(
+            'flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md border',
+            metric.trend > 0
+              ? 'text-emerald-400 bg-emerald-950/30 border-emerald-500/20'
+              : metric.trend < 0
+                ? 'text-rose-400 bg-rose-950/30 border-rose-500/20'
+                : 'text-zinc-400 bg-zinc-800 border-zinc-700',
+          )}
+        >
+          <TrendIcon size={10} />
+          {Math.abs(metric.trend)}%
+        </span>
+        <span className="text-[10px] text-zinc-600 font-sans">vs last hour</span>
+      </div>
+
+      {/* Decoration */}
+      <div
+        className={cn(
+          'absolute bottom-0 right-0 w-32 h-32 rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none',
+          isStable ? 'bg-emerald-500' : isCritical ? 'bg-rose-500' : 'bg-amber-500',
+        )}
+      />
+    </motion.div>
+  );
+};
+
+const ModerationRow = ({ item, onAction }: { item: ModerationItem; onAction: (id: string) => void }) => {
+  const isHighSeverity = item.severity === 'high';
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+      className={cn(
+        'flex flex-col md:flex-row gap-4 p-4 rounded-xl border bg-zinc-900/40 backdrop-blur-sm transition-all hover:bg-zinc-900/80',
+        isHighSeverity ? 'border-rose-500/20 shadow-[0_0_15px_-5px_rgba(244,63,94,0.1)]' : 'border-zinc-800',
+      )}
+    >
+      {/* Author */}
+      <div className="flex md:flex-col items-center md:items-start gap-3 md:w-40 md:shrink-0 md:border-r border-white/5 md:pr-4">
+        <div className="relative">
+          <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700">
+            {item.author.avatar ? (
+              <Image src={item.author.avatar} alt={item.author.name} fill className="object-cover" />
+            ) : (
+              <User className="m-2 text-zinc-500" />
+            )}
+          </div>
+          <div
+            className={cn(
+              'absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-zinc-900 flex items-center justify-center text-[8px] font-bold text-white shadow-sm',
+              item.author.trustScore > 80 ? 'bg-emerald-500' : item.author.trustScore < 40 ? 'bg-rose-500' : 'bg-amber-500',
+            )}
+          >
+            {item.author.trustScore}
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-zinc-200 truncate font-sans">{item.author.name}</p>
+          <p className="text-[10px] text-zinc-500">{item.timestamp}</p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 space-y-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              'text-[10px] uppercase font-bold px-2 py-0.5 rounded border tracking-wide',
+              item.severity === 'high'
+                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                : item.severity === 'medium'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-zinc-800 text-zinc-400 border-zinc-700',
+            )}
+          >
+            {item.severity} Priority
+          </span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-400 uppercase tracking-wide">{item.type}</span>
+          <span className="text-xs text-zinc-500 font-medium ml-1">• {item.flagReason}</span>
+        </div>
+        <p className="text-sm text-zinc-300 leading-relaxed font-sans bg-black/20 p-3 rounded-lg border border-white/5 shadow-inner">{item.content}</p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex md:flex-col justify-end gap-2 md:pl-2 md:border-l border-white/5">
+        <button
+          onClick={() => onAction(item.id)}
+          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-900/10"
+          title="Approve"
+        >
+          <Check size={16} />
+        </button>
+        <button
+          onClick={() => onAction(item.id)}
+          className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-900/10"
+          title="Reject / Ban"
+        >
+          <X size={16} />
+        </button>
+        <button className="p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors md:mt-auto border border-white/5">
+          <MoreHorizontal size={16} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+export default QuerySection16;

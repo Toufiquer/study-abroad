@@ -16,8 +16,6 @@ export async function createPage(req: Request): Promise<IResponse> {
   return withDB(async () => {
     try {
       const pageData = await req.json();
-      console.log('PageData : ', pageData);
-
       const newPage = await PageBuilder.create(pageData);
 
       return formatResponse(newPage, 'Page created successfully', 201);

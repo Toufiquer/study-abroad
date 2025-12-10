@@ -12,7 +12,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 
 import { apiSlice } from '@/redux/api/apiSlice';
-import { menuEditorApi } from '@/redux/features/menuEditorSlice';
+import { menuEditorApi } from '@/redux/features/menu-editor/menuEditorSlice';
 
 export const store = configureStore({
   reducer: {

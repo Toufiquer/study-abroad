@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { MapPin, GraduationCap, ArrowRight, Clock, DollarSign, ChevronDown, Building2, Globe, Search, BookOpenCheck, Sparkles } from 'lucide-react';
+import { MapPin, GraduationCap, ArrowRight, Clock, DollarSign, ChevronDown, Building2, Globe, Search, BookOpenCheck, Sparkles, Award } from 'lucide-react';
 import { defaultDataSection8, ISection8Data } from './data';
 
 // Simple utility for class merging
@@ -241,31 +241,62 @@ const ClientSection8: React.FC<Section8Props> = ({ data }) => {
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: idx * 0.05 }}
                                   key={course.id}
-                                  className="group/card relative bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                                  className="group/card relative bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 flex flex-col h-full"
                                 >
-                                  <div className="mb-4">
-                                    <h5 className="font-bold text-slate-900 group-hover/card:text-indigo-600 transition-colors">{course.name}</h5>
-                                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{course.description}</p>
-                                  </div>
-
-                                  <div className="space-y-4">
-                                    <div className="flex flex-wrap gap-2">
-                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
-                                        <Clock size={12} className="text-slate-400" />
-                                        {course.duration}
-                                      </div>
-                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
-                                        <DollarSign size={12} />
-                                        {course.tutionFees}
-                                      </div>
+                                  <div className="flex-grow">
+                                    <div className="mb-4">
+                                      <h5 className="font-bold text-slate-900 group-hover/card:text-indigo-600 transition-colors text-lg">{course.name}</h5>
+                                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{course.description}</p>
                                     </div>
 
+                                    {/* Detailed Degree Info List */}
+                                    {course.degreeLevelInfo && course.degreeLevelInfo.length > 0 ? (
+                                      <div className="space-y-2 mb-4">
+                                        {course.degreeLevelInfo.map(info => (
+                                          <div
+                                            key={info.id}
+                                            className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 flex flex-col xs:flex-row xs:items-center justify-between gap-2 text-xs hover:border-indigo-100 transition-colors"
+                                          >
+                                            <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100/50">
+                                              <Award size={12} />
+                                              {info.degreeLevel}
+                                            </div>
+                                            <div className="flex items-center gap-3 text-slate-500 font-medium">
+                                              <div className="flex items-center gap-1">
+                                                <Clock size={11} className="text-slate-400" />
+                                                {info.duration}
+                                              </div>
+                                              <span className="hidden xs:block w-px h-3 bg-slate-300/50"></span>
+                                              <div className="flex items-center gap-1">
+                                                <DollarSign size={11} className="text-slate-400" />
+                                                {info.tutionFees}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      /* Fallback Generic Info if no specific degree info */
+                                      <div className="flex flex-wrap gap-2 mb-4">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">
+                                          <Clock size={12} className="text-slate-400" />
+                                          {course.duration}
+                                        </div>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+                                          <DollarSign size={12} />
+                                          {course.tutionFees}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="mt-auto">
                                     <Link
                                       href={getApplyUrl(course.applyBtnParms)}
-                                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-indigo-600 transition-colors"
+                                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-indigo-600 transition-all duration-300 shadow-sm hover:shadow-indigo-500/20 group/btn"
                                     >
                                       <span>Apply Now</span>
-                                      <ArrowRight size={12} />
+                                      <ArrowRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
                                     </Link>
                                   </div>
                                 </motion.div>

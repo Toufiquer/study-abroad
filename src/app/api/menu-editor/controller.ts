@@ -10,7 +10,7 @@ const formatResponse = (data: unknown, message: string, status: number = 200) =>
       message,
       status,
     },
-    { status }
+    { status },
   );
 };
 
@@ -23,7 +23,7 @@ export const getMenuData = unstable_cache(
     return menu ? JSON.parse(JSON.stringify(menu)) : null;
   },
   ['menu-data'],
-  { tags: ['menu'] }
+  { tags: ['menu'] },
 );
 
 export async function getMenu(type: string = 'main-menu') {
@@ -37,7 +37,7 @@ export async function getMenu(type: string = 'main-menu') {
 
     return formatResponse(menu, 'Menu fetched successfully');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error:any) {
+  } catch (error: any) {
     console.error('Error fetching menu:', error);
     return formatResponse(null, error.message || 'Internal Server Error', 500);
   }
@@ -48,16 +48,11 @@ export async function updateMenu(req: Request) {
     await connectToDB();
     const body = await req.json();
     const { type = 'main-menu', items } = body;
-
     if (!items || !Array.isArray(items)) {
       return formatResponse(null, 'Invalid items format', 400);
     }
 
-    const updatedMenu = await Menu.findOneAndUpdate(
-      { type },
-      { items },
-      { new: true, upsert: true }
-    );
+    const updatedMenu = await Menu.findOneAndUpdate({ type }, { items }, { new: true, upsert: true });
 
     revalidateTag('menu');
 

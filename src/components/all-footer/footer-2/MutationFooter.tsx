@@ -1,19 +1,72 @@
 ﻿'use client';
 
-import React, { useState, useCallback } from 'react';
-
-import { Save, Plus, Trash2, Upload, X, Globe, Smartphone, Mail, MapPin, LayoutTemplate, Type, Loader2, Square, RectangleHorizontal } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  Save,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+  Globe,
+  Smartphone,
+  Mail,
+  MapPin,
+  LayoutTemplate,
+  Type,
+  Loader2,
+  Square,
+  RectangleHorizontal,
+  RefreshCw,
+  Search,
+  Grid,
+} from 'lucide-react';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
-import { defaultDataFooter2, IFooter2Data, ContactInfo } from './data';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import imageCompression from 'browser-image-compression';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface MutationFooterProps {
-  data?: string;
-  onSave?: (settings: IFooter2Data) => Promise<void> | void;
+export interface ContactInfo {
+  address: string;
+  phone: string;
+  email: string;
 }
 
-// Define available aspect ratios for the logo
+export interface QuickLink {
+  id: number;
+  title: string;
+  link: string;
+}
+
+export interface SocialLink {
+  id: number;
+  platform: string;
+  link: string;
+}
+
+export interface IFooter2Data {
+  brandName: string;
+  tagline: string;
+  logoUrl: string | null;
+  logoWidth: number;
+  contactInfo: ContactInfo;
+  quickLinks: QuickLink[];
+  socialLinks: SocialLink[];
+  copyrightText: string;
+}
+
+const defaultDataFooter2: IFooter2Data = {
+  brandName: '',
+  tagline: '',
+  logoUrl: null,
+  logoWidth: 150,
+  contactInfo: { address: '', phone: '', email: '' },
+  quickLinks: [],
+  socialLinks: [],
+  copyrightText: '© 2025 All Rights Reserved.',
+};
+
 const ASPECT_RATIOS = [
   { label: 'Square', value: 1, icon: Square },
   { label: '16:9', value: 16 / 9, icon: RectangleHorizontal },
@@ -21,21 +74,60 @@ const ASPECT_RATIOS = [
   { label: 'Wide', value: 3 / 1, icon: RectangleHorizontal },
 ];
 
-const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
-  // 1. Initialize State: Use props if available, otherwise default
-  const parseInitData = data ? JSON.parse(data) : null;
-  const [settings, setSettings] = useState<IFooter2Data>(parseInitData || defaultDataFooter2);
+interface MutationFooterProps {
+  data?: string;
+  onSave?: (settings: IFooter2Data) => Promise<void> | void;
+}
 
+const MutationFooter2 = ({ data, onSave }: MutationFooterProps) => {
+  const [settings, setSettings] = useState<IFooter2Data>(defaultDataFooter2);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Cropper State
+  const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [aspectRatio, setAspectRatio] = useState(1); // Default to Square
+  const [aspectRatio, setAspectRatio] = useState(1);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [mediaImages, setMediaImages] = useState<string[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        setSettings({ ...defaultDataFooter2, ...parsed });
+      } catch (e) {
+        console.error('Failed to parse footer data', e);
+      }
+    }
+  }, [data]);
+
+  const fetchMediaImages = useCallback(async () => {
+    setLoadingMedia(true);
+    try {
+      const response = await fetch('/api/media');
+      if (!response.ok) throw new Error('Failed to fetch media');
+      const data = await response.json();
+      if (data?.data && Array.isArray(data.data)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setMediaImages(data.data.map((i: any) => i.url));
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.error('Could not load media library');
+    } finally {
+      setLoadingMedia(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showMediaModal) {
+      fetchMediaImages();
+    }
+  }, [showMediaModal, fetchMediaImages]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -43,70 +135,49 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
       if (onSave) {
         await onSave(settings);
       } else {
-        // Simulate API call if no handler provided
         await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Saved Settings:', settings);
       }
       toast.success('Footer settings updated successfully!');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Failed to update settings');
-      console.error(error);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please upload a valid image (JPG, PNG, WEBP).');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         setImageSrc(reader.result as string);
         setZoom(1);
         setAspectRatio(1);
+        setShowMediaModal(false);
         setShowCropper(true);
       };
       reader.readAsDataURL(file);
     }
+    e.target.value = '';
   };
 
-  const handleCropSave = async () => {
-    if (!imageSrc || !croppedAreaPixels) return;
-    try {
-      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-      setSettings({ ...settings, logoUrl: croppedImage });
-      setShowCropper(false);
-      setImageSrc(null);
-      toast.success('Logo updated successfully');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.message || 'Error cropping image');
-    }
+  const handleLibrarySelect = (url: string) => {
+    setImageSrc(url);
+    setZoom(1);
+    setAspectRatio(1);
+    setShowMediaModal(false);
+    setShowCropper(true);
   };
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<string> => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) throw new Error('No 2d context');
-
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-
-    // High quality scaling
-    ctx.imageSmoothingQuality = 'high';
-
-    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
-
-    return canvas.toDataURL('image/png');
-  };
+  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
 
   const createImage = (url: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {
@@ -116,6 +187,82 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
       image.setAttribute('crossOrigin', 'anonymous');
       image.src = url;
     });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getCroppedImgBlob = async (imageSrc: string, pixelCrop: any): Promise<Blob | null> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return null;
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
+
+    return new Promise(resolve => {
+      canvas.toBlob(blob => resolve(blob), 'image/png', 1);
+    });
+  };
+
+  const handleCropAndUpload = async () => {
+    if (!imageSrc || !croppedAreaPixels) return;
+
+    setIsUploading(true);
+    try {
+      const croppedBlob = await getCroppedImgBlob(imageSrc, croppedAreaPixels);
+      if (!croppedBlob) throw new Error('Failed to crop image');
+
+      const file = new File([croppedBlob], 'logo-optimized.png', { type: 'image/png' });
+
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1000,
+        useWebWorker: true,
+        fileType: 'image/png' as const,
+      };
+      const compressedFile = await imageCompression(file, options);
+
+      const formData = new FormData();
+      formData.append('image', compressedFile);
+
+      const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+      if (!apiKey) throw new Error('ImgBB API Key missing');
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const newUrl = data.data.url;
+        await fetch('/api/media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            delete_url: data.data.delete_url,
+            url: newUrl,
+            display_url: data.data.display_url,
+          }),
+        });
+
+        setSettings(prev => ({ ...prev, logoUrl: newUrl }));
+        setShowCropper(false);
+        setImageSrc(null);
+        toast.success('Logo uploaded and optimized!');
+      } else {
+        throw new Error('Upload to storage failed');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.message || 'Error processing image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const updateContact = (field: keyof ContactInfo, value: string) => {
     setSettings(prev => ({
@@ -124,7 +271,6 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
     }));
   };
 
-  // Dynamic List Handlers
   const handleArrayChange = (arrayName: 'quickLinks' | 'socialLinks', id: number, field: string, value: string) => {
     setSettings(prev => ({
       ...prev,
@@ -143,14 +289,12 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
 
   const addItem = (arrayName: 'quickLinks' | 'socialLinks') => {
     const newItem = arrayName === 'quickLinks' ? { id: Date.now(), title: '', link: '' } : { id: Date.now(), platform: '', link: '' };
-
     setSettings(prev => ({
       ...prev,
       [arrayName]: [...prev[arrayName], newItem],
     }));
   };
 
-  // --- REUSABLE STYLES FOR GLASS EFFECT ---
   const glassCardClass = 'bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl overflow-hidden';
   const glassHeaderClass = 'bg-white/5 px-6 py-4 border-b border-white/10 flex justify-between items-center';
   const glassInputClass =
@@ -158,9 +302,9 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
   const labelClass = 'text-xs font-bold text-indigo-300 uppercase tracking-wider';
 
   return (
-    // 1. MAIN BACKGROUND
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-black pb-20 text-slate-200">
-      {/* Sticky Header */}
+      <ToastContainer position="bottom-right" theme="dark" toastClassName="bg-slate-900 border border-white/10 text-slate-200" />
+
       <div className="sticky top-0 z-40 bg-slate-950/70 backdrop-blur-lg border-b border-white/10 shadow-lg">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -168,13 +312,13 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
               <LayoutTemplate size={20} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">Footer Builder</h1>
+              <h1 className="text-lg font-bold text-white">Footer Builder (V2)</h1>
               <p className="text-xs text-slate-400">Manage global footer content</p>
             </div>
           </div>
           <button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isUploading}
             className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium rounded-lg shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-70 transform hover:scale-105 active:scale-95"
           >
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
@@ -184,9 +328,7 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
       </div>
 
       <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
-        {/* Left Column: Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Brand Info */}
           <div className={glassCardClass}>
             <div className={glassHeaderClass}>
               <h2 className="font-semibold text-white flex items-center gap-2">
@@ -217,7 +359,6 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div className={glassCardClass}>
             <div className={glassHeaderClass}>
               <h2 className="font-semibold text-white flex items-center gap-2">
@@ -257,15 +398,13 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
           </div>
         </div>
 
-        {/* Right Column: Settings & Contact */}
         <div className="space-y-6">
-          {/* Logo */}
           <div className={glassCardClass}>
             <div className="p-6">
               <h3 className="text-sm font-semibold text-slate-300 mb-4 uppercase tracking-wider">Logo</h3>
-              <div className="flex flex-col items-center p-6 border-2 border-dashed border-white/10 rounded-xl bg-black/20 mb-4 min-h-[120px] justify-center">
+              <div className="flex flex-col items-center p-6 border-2 border-dashed border-white/10 rounded-xl bg-black/20 mb-4 min-h-[120px] justify-center group/preview relative overflow-hidden">
                 {settings.logoUrl ? (
-                  <div className="relative">
+                  <div className="relative group/overlay">
                     <Image
                       src={settings.logoUrl}
                       width={settings.logoWidth}
@@ -274,6 +413,17 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
                       className="object-contain drop-shadow-lg"
                       style={{ width: `${settings.logoWidth}px` }}
                     />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/overlay:opacity-100 bg-black/50 backdrop-blur-sm transition-all rounded-lg gap-2">
+                      <button onClick={() => setShowMediaModal(true)} className="p-2 bg-indigo-600 rounded-full hover:bg-indigo-500 text-white shadow-lg">
+                        <RefreshCw size={14} />
+                      </button>
+                      <button
+                        onClick={() => setSettings(prev => ({ ...prev, logoUrl: null }))}
+                        className="p-2 bg-red-600 rounded-full hover:bg-red-500 text-white shadow-lg"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <span className="text-slate-500 text-sm flex flex-col items-center gap-2">
@@ -282,10 +432,13 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
                   </span>
                 )}
               </div>
-              <label className="cursor-pointer w-full block text-center py-2.5 border border-white/10 bg-white/5 rounded-lg hover:bg-white/10 text-sm font-medium text-slate-300 transition-colors">
-                Upload New
-                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-              </label>
+              <button
+                onClick={() => setShowMediaModal(true)}
+                className="cursor-pointer w-full text-center py-2.5 border border-white/10 bg-white/5 rounded-lg hover:bg-white/10 text-sm font-medium text-slate-300 transition-colors flex items-center justify-center gap-2"
+              >
+                <Grid size={16} /> {settings.logoUrl ? 'Change Logo' : 'Select Media'}
+              </button>
+
               <div className="mt-5">
                 <div className="flex justify-between text-xs text-slate-400 mb-2">
                   <span>Size</span>
@@ -303,7 +456,6 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
             </div>
           </div>
 
-          {/* Contact */}
           <div className={`${glassCardClass} p-6 space-y-5`}>
             <h3 className="text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wider">Contact Details</h3>
             <div className="relative">
@@ -335,7 +487,6 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
             </div>
           </div>
 
-          {/* Socials & Copyright */}
           <div className={`${glassCardClass} p-6`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Social Links</h3>
@@ -373,108 +524,187 @@ const MutationFooter = ({ data, onSave }: MutationFooterProps) => {
         </div>
       </div>
 
-      {/* Image Cropper Modal (Dark Theme) with Shape Options */}
-      {showCropper && imageSrc && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-slate-900/50 backdrop-blur-md">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Upload size={18} className="text-indigo-400" />
-                Adjust Image
-              </h3>
-              <button
-                onClick={() => {
-                  setShowCropper(false);
-                  setImageSrc(null);
-                }}
-                className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Cropper Area */}
-            <div className="relative flex-1 min-h-[300px] bg-black">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={aspectRatio}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-                classes={{
-                  containerClassName: 'bg-transparent',
-                  cropAreaClassName: 'border-2 border-indigo-500 shadow-[0_0_0_9999px_rgba(0,0,0,0.8)]',
-                }}
-              />
-            </div>
-
-            {/* Controls Area */}
-            <div className="p-6 bg-slate-900 space-y-6 border-t border-white/10">
-              {/* 1. Aspect Ratio Selector */}
-              <div className="space-y-3">
-                <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Crop Shape</div>
-                <div className="grid grid-cols-4 gap-2">
-                  {ASPECT_RATIOS.map(ratio => (
-                    <button
-                      key={ratio.label}
-                      onClick={() => setAspectRatio(ratio.value)}
-                      className={`flex flex-col items-center justify-center gap-2 py-3 rounded-lg border transition-all duration-200 ${
-                        Math.abs(aspectRatio - ratio.value) < 0.01
-                          ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <ratio.icon size={18} />
-                      <span className="text-[10px] font-medium">{ratio.label}</span>
-                    </button>
-                  ))}
+      <AnimatePresence>
+        {showMediaModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-4xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[80vh]"
+            >
+              <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Media Library</h3>
+                  <p className="text-slate-400 text-sm">Select an image or upload a new one.</p>
                 </div>
+                <button onClick={() => setShowMediaModal(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
+                </button>
               </div>
 
-              {/* 2. Zoom Slider */}
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  <span>Zoom Level</span>
-                  <span>{Math.round(zoom * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  step="0.1"
-                  value={zoom}
-                  onChange={e => setZoom(parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
-                />
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-950/50">
+                {loadingMedia ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500">
+                    <Loader2 className="animate-spin" size={32} />
+                    <p>Loading library...</p>
+                  </div>
+                ) : mediaImages.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <label className="cursor-pointer border-2 border-dashed border-indigo-500/30 bg-indigo-500/5 hover:bg-indigo-500/10 hover:border-indigo-500/50 rounded-xl flex flex-col items-center justify-center gap-2 text-indigo-400 transition-all min-h-[160px]">
+                      <Upload size={24} />
+                      <span className="text-xs font-bold uppercase tracking-wide">Upload New</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </label>
+                    {mediaImages.map((url, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleLibrarySelect(url)}
+                        className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-slate-900 cursor-pointer hover:border-indigo-500/50 transition-all"
+                      >
+                        <Image src={url} alt="Media asset" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium text-white border border-white/20">
+                            Select
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-500">
+                    <Search size={48} className="opacity-20" />
+                    <div className="text-center">
+                      <p className="font-medium">No media found</p>
+                      <p className="text-xs">Upload your first image to get started.</p>
+                    </div>
+                    <label className="cursor-pointer px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-sm font-medium">
+                      Upload Image
+                      <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </label>
+                  </div>
+                )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
+      <AnimatePresence>
+        {showCropper && imageSrc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-slate-900/50 backdrop-blur-md">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <RefreshCw size={18} className="text-indigo-400" />
+                  Adjust Image
+                </h3>
                 <button
                   onClick={() => {
                     setShowCropper(false);
                     setImageSrc(null);
                   }}
-                  className="flex-1 px-4 py-3 border border-white/10 text-slate-300 rounded-xl hover:bg-white/5 font-medium transition-colors"
+                  className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCropSave}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl hover:from-indigo-500 hover:to-indigo-400 font-medium shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95"
-                >
-                  Apply Changes
+                  <X size={20} />
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+
+              <div className="relative flex-1 min-h-[300px] bg-black">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={aspectRatio}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                  classes={{
+                    containerClassName: 'bg-transparent',
+                    cropAreaClassName: 'border-2 border-indigo-500 shadow-[0_0_0_9999px_rgba(0,0,0,0.8)]',
+                  }}
+                />
+              </div>
+
+              <div className="p-6 bg-slate-900 space-y-6 border-t border-white/10">
+                <div className="space-y-3">
+                  <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Crop Shape</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {ASPECT_RATIOS.map(ratio => (
+                      <button
+                        key={ratio.label}
+                        onClick={() => setAspectRatio(ratio.value)}
+                        className={`flex flex-col items-center justify-center gap-2 py-3 rounded-lg border transition-all duration-200 ${
+                          Math.abs(aspectRatio - ratio.value) < 0.01
+                            ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300'
+                            : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        <ratio.icon size={18} />
+                        <span className="text-[10px] font-medium">{ratio.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <span>Zoom Level</span>
+                    <span>{Math.round(zoom * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.1"
+                    value={zoom}
+                    onChange={e => setZoom(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowCropper(false);
+                      setImageSrc(null);
+                    }}
+                    disabled={isUploading}
+                    className="flex-1 px-4 py-3 border border-white/10 text-slate-300 rounded-xl hover:bg-white/5 font-medium transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCropAndUpload}
+                    disabled={isUploading}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl hover:from-indigo-500 hover:to-indigo-400 font-medium shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
+                    {isUploading ? 'Processing...' : 'Apply & Upload'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-export default MutationFooter;
+export default MutationFooter2;
